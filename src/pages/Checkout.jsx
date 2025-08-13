@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import Nav from '../Components/Nav/Nav'; // Adjust if path differs
+import Header from '../Components/Nav/Header'; // Adjust if path differs
 
 const Checkout = () => {
-  // Move hooks to the top
   const { cart = [], updateQuantity = () => {}, removeFromCart = () => {}, cartTotal = 0, clearCart = () => {} } = useCart() || {};
   const [paymentDetails, setPaymentDetails] = useState({
     cardNumber: '',
@@ -26,10 +25,9 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Nav />
-      <div className="max-w-6xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">Checkout</h1>
+    <div className="min-h-screen bg-white pt-16 sm:pt-20"> {/* Added responsive padding for header */}
+      <Header />
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8 mt-4 sm:mt-8 md:mt-12"> {/* Responsive padding and margin */}
         {cart.length === 0 ? (
           <div className="text-center">
             <p className="text-gray-500 mb-4">Your cart is empty.</p>
@@ -38,19 +36,19 @@ const Checkout = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8"> {/* Adjusted gap for mobile */}
             <div>
-              <h2 className="text-2xl font-semibold mb-4">Your Items</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4">Your Items</h2>
               <ul className="divide-y divide-gray-200">
                 {cart.map((item) => (
-                  <li key={item.id} className="flex items-center py-4">
+                  <li key={item.id} className="flex items-center py-3 sm:py-4">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded"
                     />
-                    <div className="flex-1 ml-4">
-                      <p className="text-lg font-medium">{item.name}</p>
+                    <div className="flex-1 ml-3 sm:ml-4">
+                      <p className="text-base sm:text-lg font-medium">{item.name}</p>
                       <p className="text-sm text-gray-500">₦{item.price}</p>
                       <div className="flex items-center mt-2">
                         <label className="text-sm mr-2">Qty:</label>
@@ -58,7 +56,7 @@ const Checkout = () => {
                           type="number"
                           value={item.quantity}
                           onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                          className="w-16 border rounded px-2 py-1"
+                          className="w-14 sm:w-16 border rounded px-2 py-1"
                           min="1"
                         />
                       </div>
@@ -78,12 +76,12 @@ const Checkout = () => {
               <div className="mt-6 border-t pt-4">
                 <p className="flex justify-between text-sm"><span>Subtotal:</span> <span>₦{cartTotal.toLocaleString()}</span></p>
                 <p className="flex justify-between text-sm mt-2"><span>Tax (10%):</span> <span>₦{tax.toLocaleString()}</span></p>
-                <p className="flex justify-between text-lg font-bold mt-2"><span>Grand Total:</span> <span>₦{grandTotal.toLocaleString()}</span></p>
+                <p className="flex justify-between text-base sm:text-lg font-bold mt-2"><span>Grand Total:</span> <span>₦{grandTotal.toLocaleString()}</span></p>
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-semibold mb-4">Payment Details</h2>
-              <form className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4">Payment Details</h2>
+              <form className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">Card Number</label>
                   <input
