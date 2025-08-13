@@ -16,6 +16,10 @@ const products = [
   { id: 6, name: 'Formal Shoes', price: '22,000', image: 'https://images.unsplash.com/photo-1564584217132-2271feaeb3c5?q=80&w=1170&auto=format&fit=crop', category: 'Footwears', description: 'Polished formal shoes crafted for sophistication and comfort. Perfect for business meetings or formal events.' },
   { id: 7, name: 'Casual Shirt', price: '9,500', image: 'https://images.pexels.com/photos/2536965/pexels-photo-2536965.jpeg', category: 'Cloths', description: 'A lightweight casual shirt with a modern fit, ideal for everyday wear or casual outings.' },
   { id: 8, name: 'Leather Belt', price: '4,000', image: 'https://images.pexels.com/photos/2633986/pexels-photo-2633986.jpeg', category: 'Accessories', description: 'A durable leather belt with a classic buckle, adding a touch of style to any outfit.' },
+  { id: 9, name: 'Tote Bag', price: '12,500', image: 'https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg', category: 'Bags', description: 'A chic tote bag with ample space, perfect for work or casual outings. Crafted with premium materials.' },
+  { id: 10, name: 'Running Shoes', price: '19,000', image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg', category: 'Footwears', description: 'Lightweight running shoes with superior cushioning, designed for performance and comfort.' },
+  { id: 11, name: 'Denim Jacket', price: '15,000', image: 'https://images.pexels.com/photos/1366877/pexels-photo-1366877.jpeg', category: 'Cloths', description: 'A stylish denim jacket with a relaxed fit, ideal for layering in any season.' },
+  { id: 12, name: 'Sunglasses', price: '6,500', image: 'https://images.pexels.com/photos/343720/pexels-photo-343720.jpeg', category: 'Accessories', description: 'Trendy sunglasses with UV protection, perfect for adding flair to your look.' },
 ];
 
 const categories = [
@@ -34,13 +38,13 @@ const Feature = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-50">
+    <div className="p-4 sm:p-8 bg-gray-50">
       {/* Featured Products */}
       <section>
-        <h1 className="text-center mt-8 mb-16 text-[30px] font-semibold">
+        <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[30px] font-semibold">
           💥 Featured Products 💥
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.slice(0, visibleProducts).map((product) => (
             <Link
               to={`/product/${product.id}`}
@@ -50,17 +54,17 @@ const Feature = () => {
               <img
                 src={product.image}
                 alt={product.name}
-                className="w-full h-[400px] object-cover"
+                className="w-full h-[250px] sm:h-[400px] object-cover"
               />
               <div className="p-4 text-left">
-                <h2 className="text-gray-500 text-sm font-normal mb-1">
+                <h2 className="text-xs sm:text-sm text-gray-500 font-normal mb-1">
                   {product.category}
                 </h2>
-                <h3 className="text-lg font-light mb-2 border-b border-gray-300 pb-2">
+                <h3 className="text-base sm:text-lg font-light mb-2 border-b border-gray-300 pb-2">
                   {product.name}
                 </h3>
                 <div className="flex justify-between items-center mt-4">
-                  <p className="text-red-600 font-bold text-base">
+                  <p className="text-sm sm:text-base text-red-600 font-bold">
                     ₦{product.price}
                   </p>
                   <div className="flex items-center gap-3">
@@ -79,10 +83,11 @@ const Feature = () => {
           ))}
         </div>
         {visibleProducts < products.length && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 px-6">
             <button
               onClick={loadMore}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-gray-50 text-black px-8 py-3 text-lg rounded-lg hover:bg-gray-200 transition-colors w-full border-2 border-gray-300"
+              aria-label="Load more products"
             >
               Load More
             </button>
@@ -91,26 +96,31 @@ const Feature = () => {
       </section>
 
       {/* Shop by Category */}
-      <section className="mt-16">
-        <h1 className="text-center mb-16 text-[30px] font-semibold">
+      <section className="mt-8 sm:mt-16">
+        <h1 className="text-center mb-8 sm:mb-16 text-[30px] font-semibold">
           Shop by Category
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {categories.map((category) => (
-            <div
+            <Link
+              to={`/category/${category.name.toLowerCase()}`}
               key={category.name}
               className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 hover:-translate-y-1"
             >
               <img
                 src={category.image}
                 alt={category.name}
-                className="w-full h-[200px] object-cover"
+                className="w-full h-[150px] sm:h-[200px] object-cover"
               />
               <div className="p-4 text-left">
-                <h3 className="mb-2 font-medium">{category.name}</h3>
-                <p className="text-gray-600 text-sm">{category.description}</p>
+                <h3 className="text-base sm:font-medium mb-2">
+                  {category.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  {category.description}
+                </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

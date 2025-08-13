@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, User, ChevronDown, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, ChevronDown, Menu, X } from 'lucide-react'; // Changed ShoppingBag to ShoppingCart
 import { useCart } from '../../context/CartContext';
 
 const Nav = () => {
@@ -41,7 +41,7 @@ const Nav = () => {
         scrolled ? 'bg-white/90 text-black' : 'bg-transparent text-white'
       }`}
     >
-      {/* Mobile Menu Toggle */}
+      {/* Mobile Menu Toggle and Cart */}
       <div className="flex justify-between items-center w-full sm:hidden">
         <button
           className="nav-toggle"
@@ -59,7 +59,56 @@ const Nav = () => {
         <Link to="/" className="text-2xl tab:text-[28px] font-bold tracking-wide henny-penny">
           BlissByUddy
         </Link>
-        <div className="w-6" />
+        {/* Mobile Cart */}
+        <div className="relative cursor-pointer" ref={cartRef}>
+          <div className="flex items-center gap-2" onClick={() => setIsCartOpen((prev) => !prev)}>
+            <ShoppingCart size={20} className={scrolled ? 'text-black' : 'text-white'} /> {/* Changed to ShoppingCart */}
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {cart.reduce((total, item) => total + (item.quantity || 0), 0)}
+              </span>
+            )}
+          </div>
+          {isCartOpen && (
+            <div className="absolute right-0 top-full mt-2 w-[90vw] max-w-[400px] tab:w-[360px] bg-white text-black rounded-lg shadow-lg z-50 p-4">
+              {cart.length === 0 ? (
+                <p className="text-gray-500 text-sm">Your cart is empty.</p>
+              ) : (
+                <>
+                  <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                    {cart.map((item) => (
+                      <li key={item.id} className="flex items-center justify-between py-2">
+                        <img src={item.image} alt={item.name || 'Cart item'} className="w-10 h-10 object-cover rounded" />
+                        <div className="flex-1 ml-2">
+                          <p className="text-xs font-medium">{item.name || 'Unknown Item'}</p>
+                          <p className="text-xs text-gray-500">
+                            ₦{(item.price || 0).toLocaleString()} x {item.quantity || 0}
+                          </p>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-xs hover:underline">
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 border-t pt-2">
+                    <p className="text-xs font-medium">Subtotal: ₦{cartTotal.toLocaleString()}</p>
+                    <Link
+                      to="/checkout"
+                      className="block mt-2 bg-pink-500 text-white text-center py-2 rounded-md hover:bg-pink-600 text-xs"
+                      onClick={() => {
+                        setIsCartOpen(false);
+                        setIsNavOpen(false);
+                      }}
+                    >
+                      Checkout
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Nav Content */}
@@ -92,61 +141,8 @@ const Nav = () => {
             </Link>
           ))}
 
-          {/* Mobile Cart & Profile */}
+          {/* Mobile Profile */}
           <div className="flex flex-col gap-4 sm:hidden mt-4">
-            {/* Cart */}
-            <div className="relative cursor-pointer" ref={cartRef}>
-              <div className="flex items-center gap-2" onClick={() => setIsCartOpen((prev) => !prev)}>
-                <ShoppingBag size={20} className={scrolled ? 'text-black' : 'text-white'} />
-                <span className={`text-[14px] ${scrolled ? 'text-black' : 'text-white'}`}>Cart</span>
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 left-5 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {cart.reduce((total, item) => total + (item.quantity || 0), 0)}
-                  </span>
-                )}
-              </div>
-              {isCartOpen && (
-                <div className="mt-2 w-[90vw] max-w-[400px] tab:w-[360px] bg-white text-black rounded-lg shadow-lg z-50 p-4">
-                  {cart.length === 0 ? (
-                    <p className="text-gray-500 text-sm">Your cart is empty.</p>
-                  ) : (
-                    <>
-                      <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                        {cart.map((item) => (
-                          <li key={item.id} className="flex items-center justify-between py-2">
-                            <img src={item.image} alt={item.name || 'Cart item'} className="w-10 h-10 object-cover rounded" />
-                            <div className="flex-1 ml-2">
-                              <p className="text-xs font-medium">{item.name || 'Unknown Item'}</p>
-                              <p className="text-xs text-gray-500">
-                                ₦{(item.price || 0).toLocaleString()} x {item.quantity || 0}
-                              </p>
-                            </div>
-                            <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-xs hover:underline">
-                              Remove
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-4 border-t pt-2">
-                        <p className="text-xs font-medium">Subtotal: ₦{cartTotal.toLocaleString()}</p>
-                        <Link
-                          to="/checkout"
-                          className="block mt-2 bg-pink-500 text-white text-center py-2 rounded-md hover:bg-pink-600 text-xs"
-                          onClick={() => {
-                            setIsCartOpen(false);
-                            setIsNavOpen(false);
-                          }}
-                        >
-                          Checkout
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Profile */}
             <div ref={dropdownRef} className="relative cursor-pointer" onClick={() => setIsDropdownOpen((prev) => !prev)}>
               <div className="flex items-center gap-2">
                 <User size={20} className={scrolled ? 'text-black' : 'text-white'} />
@@ -178,11 +174,11 @@ const Nav = () => {
         <div className="hidden sm:flex gap-[40px] tab:gap-[32px] items-center order-3">
           {/* Cart */}
           <div className="relative cursor-pointer" ref={cartRef}>
-            <ShoppingBag
+            <ShoppingCart
               size={20}
               className={`${scrolled ? 'text-black' : 'text-white'}`}
               onClick={() => setIsCartOpen((prev) => !prev)}
-            />
+            /> {/* Changed to ShoppingCart */}
             {cart.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {cart.reduce((total, item) => total + (item.quantity || 0), 0)}

@@ -6,6 +6,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Checkout from './pages/Checkout'; // <-- Import Checkout
 import ProductDetail from './context/ProductDetail';
+import CategoryPage from './pages/CategoryPage';
 import './index.css';
 import { CartProvider } from './context/CartContext';
 
@@ -18,6 +19,7 @@ function App() {
         <Route path='/signup' element={<SignUp />} />
         <Route path='/checkout' element={<Checkout />} /> {/* ✅ Add this */}
         <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/category/:categoryName" element={<CategoryPage />} />
       </Routes>
     </CartProvider>
   );

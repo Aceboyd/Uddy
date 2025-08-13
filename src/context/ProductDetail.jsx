@@ -23,7 +23,7 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="font-['Playfair_Display',_serif]">
-        <Header className="fixed top-0 w-full z-10" />
+        <Nav className="fixed top-0 w-full z-10" />
         <div className="pt-24 p-8 text-center text-gray-800">
           <h2 className="text-3xl font-semibold">Product Not Found</h2>
           <Link to="/" className="text-amber-600 hover:underline text-lg mt-4 inline-block">
@@ -67,45 +67,63 @@ const ProductDetail = () => {
       </style>
       <div className="font-['Playfair_Display',_serif]">
         <Nav className="fixed top-0 w-full z-10" />
-        <div className="pt-24 p-8 bg-amber-50 min-h-screen">
-          <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-8 fade-in">
-            <Link to="/" className="text-amber-600 hover:text-amber-700 text-lg underline mb-6 inline-block transition-colors">
+        <div className="pt-20 md:pt-24 p-4 sm:p-6 md:p-8 bg-amber-50 min-h-screen">
+
+          <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 fade-in">
+            <Link
+              to="/"
+              className="text-amber-600 hover:text-amber-700 text-base sm:text-lg underline mb-4 sm:mb-6 inline-block transition-colors"
+            >
               ← Back to Collection
             </Link>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="relative overflow-hidden rounded-xl">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-12 gap-6 sm:gap-8">
+              
+              {/* Image first on mobile, second on desktop */}
+              <div className="relative overflow-hidden rounded-xl order-1 md:order-2">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-[600px] object-cover product-image"
+                  className="w-full h-auto md:h-[600px] object-cover product-image"
                 />
               </div>
-              <div className="flex flex-col justify-center">
-                <h2 className="text-gray-600 text-sm uppercase tracking-wider mb-2">
+
+              {/* Details second on mobile, first on desktop */}
+              <div className="flex flex-col justify-center order-2 md:order-1">
+                <h2 className="text-gray-600 text-xs sm:text-sm uppercase tracking-wider mb-1 sm:mb-2">
                   {product.category}
                 </h2>
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
-                <p className="text-amber-600 font-semibold text-3xl mb-6">₦{product.price}</p>
-                <p className="text-gray-700 text-lg mb-6 leading-relaxed">{product.description}</p>
-                <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Details</h3>
-                  <ul className="text-gray-700 text-base space-y-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+                  {product.name}
+                </h1>
+                <p className="text-amber-600 font-semibold text-xl sm:text-2xl md:text-3xl mb-4 sm:mb-6">
+                  ₦{product.price}
+                </p>
+                <p className="text-gray-700 text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
+                  {product.description}
+                </p>
+                <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
+                    Product Details
+                  </h3>
+                  <ul className="text-gray-700 text-sm sm:text-base space-y-1 sm:space-y-2">
                     <li><span className="font-medium">Material:</span> {product.details.material}</li>
                     <li><span className="font-medium">Dimensions:</span> {product.details.dimensions}</li>
                     <li><span className="font-medium">Origin:</span> {product.details.origin}</li>
                   </ul>
                 </div>
-                <div className="flex items-center gap-6 mt-8">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-6 sm:mt-8">
                   <button
                     onClick={() => addToCart(product)}
-                    className="luxury-button flex items-center gap-3 text-white px-6 py-3 rounded-lg text-lg font-medium"
+                    className="luxury-button flex items-center gap-2 sm:gap-3 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-base sm:text-lg font-medium"
                   >
-                    <ShoppingCart className="w-6 h-6" />
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                     Add to Cart
                   </button>
-                  <Heart className="w-8 h-8 text-gray-700 cursor-pointer hover:text-red-600 transition-colors" />
+                  <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700 cursor-pointer hover:text-red-600 transition-colors" />
                 </div>
               </div>
+
             </div>
           </div>
         </div>
