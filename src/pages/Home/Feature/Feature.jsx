@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -5,7 +6,7 @@ import CATIMG from '/CATIMG.jpg';
 import CATIMG2 from '/CATIMG2.jpg';
 import CATIMG3 from '/CATIMG3.jpg';
 import CATIMG4 from '/CATIMG4.jpg';
-import { useCart } from '../../../context/CartContext'; // Adjust path as needed
+import { useCart } from '../../../context/CartContext';
 
 const products = [
   { id: 1, name: 'Elegant Handbag', price: '14,000', image: 'https://images.pexels.com/photos/2090785/pexels-photo-2090785.jpeg', category: 'Bags', description: 'A stylish and spacious handbag perfect for daily use or special occasions. Made with high-quality leather and durable stitching.' },
@@ -44,7 +45,7 @@ const Feature = () => {
         <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[30px] font-semibold">
           💥 Featured Products 💥
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.slice(0, visibleProducts).map((product) => (
             <Link
               to={`/product/${product.id}`}
@@ -54,7 +55,7 @@ const Feature = () => {
               <img
                 src={product.image}
                 alt={product.name}
-                className="w-full h-[250px] sm:h-[400px] object-cover"
+                className="w-full h-[150px] sm:h-[400px] object-cover"
               />
               <div className="p-4 text-left">
                 <h2 className="text-xs sm:text-sm text-gray-500 font-normal mb-1">
@@ -96,11 +97,11 @@ const Feature = () => {
       </section>
 
       {/* Shop by Category */}
-      <section className="mt-8 sm:mt-16">
+      <section id="shop-by-category" className="mt-8 sm:mt-16">
         <h1 className="text-center mb-8 sm:mb-16 text-[30px] font-semibold">
           Shop by Category
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {categories.map((category) => (
             <Link
               to={`/category/${category.name.toLowerCase()}`}
@@ -110,7 +111,7 @@ const Feature = () => {
               <img
                 src={category.image}
                 alt={category.name}
-                className="w-full h-[150px] sm:h-[200px] object-cover"
+                className="w-full h-[100px] sm:h-[200px] object-cover"
               />
               <div className="p-4 text-left">
                 <h3 className="text-base sm:font-medium mb-2">

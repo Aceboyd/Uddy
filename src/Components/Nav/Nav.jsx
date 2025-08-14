@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, User, ChevronDown, Menu, X } from 'lucide-react'; // Changed ShoppingBag to ShoppingCart
+import { Link, useLocation } from 'react-router-dom';
+import { ShoppingCart, User, ChevronDown, Menu, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const Nav = () => {
@@ -15,6 +15,7 @@ const Nav = () => {
 
   const userName = 'Alex'; // Replace with auth context
   const { cart = [], removeFromCart = () => {}, cartTotal = 0 } = useCart() || {};
+  const location = useLocation(); // To check current route
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -33,7 +34,28 @@ const Nav = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navLinks = ['Home', 'Collection', 'Shop', 'About Us'];
+  const navLinks = ['Home', 'Collection', 'Contact Us', 'About Us'];
+
+  const handleScrollToCategory = (e) => {
+    e.preventDefault();
+    const categorySection = document.getElementById('shop-by-category');
+    if (categorySection) {
+      categorySection.scrollIntoView({ behavior: 'smooth' });
+      setIsNavOpen(false);
+    }
+  };
+
+  const handleScrollToContact = (e) => {
+    e.preventDefault();
+    const contactSection = document.getElementById('contact-us');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+      setIsNavOpen(false);
+    } else if (location.pathname !== '/contact-us') {
+      // Navigate to /contact-us if not on the page
+      window.location.href = '/contact-us';
+    }
+  };
 
   return (
     <header
@@ -62,7 +84,7 @@ const Nav = () => {
         {/* Mobile Cart */}
         <div className="relative cursor-pointer" ref={cartRef}>
           <div className="flex items-center gap-2" onClick={() => setIsCartOpen((prev) => !prev)}>
-            <ShoppingCart size={20} className={scrolled ? 'text-black' : 'text-white'} /> {/* Changed to ShoppingCart */}
+            <ShoppingCart size={20} className={scrolled ? 'text-black' : 'text-white'} />
             {cart.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {cart.reduce((total, item) => total + (item.quantity || 0), 0)}
@@ -131,11 +153,18 @@ const Nav = () => {
           {navLinks.map((item) => (
             <Link
               key={item}
-              to={`/${item.toLowerCase().replace(' ', '-')}`}
+              id={`nav-link-${item === 'Collection' ? 'feature' : item.toLowerCase().replace(' ', '-')}`}
+              to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
               className={`text-[14px] sm:text-[16px] tab:text-[15px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:transition-all after:duration-300 ${
                 scrolled ? 'after:bg-black hover:text-black' : 'after:bg-white hover:text-white'
               }`}
-              onClick={() => setIsNavOpen(false)}
+              onClick={
+                item === 'Collection'
+                  ? handleScrollToCategory
+                  : item === 'Contact Us'
+                  ? handleScrollToContact
+                  : () => setIsNavOpen(false)
+              }
             >
               {item}
             </Link>
@@ -178,7 +207,7 @@ const Nav = () => {
               size={20}
               className={`${scrolled ? 'text-black' : 'text-white'}`}
               onClick={() => setIsCartOpen((prev) => !prev)}
-            /> {/* Changed to ShoppingCart */}
+            />
             {cart.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {cart.reduce((total, item) => total + (item.quantity || 0), 0)}

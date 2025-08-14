@@ -126,16 +126,22 @@ const Header = () => {
             ref={navRef}
             className={`nav-menu flex flex-col sm:flex-row gap-4 sm:gap-[40px] mt-4 sm:mt-0 ${isNavOpen ? 'flex' : 'hidden sm:flex'} sm:w-auto order-2 sm:order-1`}
           >
-            {['Home', 'Collection', 'Shop', 'About Us'].map((item) => (
-              <Link
-                key={item}
-                to={`/${item.toLowerCase().replace(' ', '-')}`}
-                className="text-[14px] sm:text-[16px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:transition-all after:duration-300 after:bg-black hover:text-black"
-                onClick={() => setIsNavOpen(false)}
-              >
-                {item}
-              </Link>
-            ))}
+            {[
+  { name: 'Home', path: '/', id: 'nav-home' },
+  { name: 'Collection', path: '/', id: 'nav-collection' },
+  { name: 'Shop', path: '/', id: 'nav-shop' },
+  { name: 'About Us', path: '/', id: 'nav-about' }
+].map((item) => (
+  <Link
+    key={item.id}
+    to={item.path}
+    className="text-[14px] sm:text-[16px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:transition-all after:duration-300 after:bg-black hover:text-black"
+    onClick={() => setIsNavOpen(false)}
+  >
+    {item.name}
+  </Link>
+))}
+
 
             {/* Profile in Mobile Menu */}
             <div className="flex flex-col gap-4 sm:hidden mt-4">

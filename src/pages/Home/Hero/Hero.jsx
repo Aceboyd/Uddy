@@ -26,7 +26,6 @@ const slides = [
         Power Dressing to Weekend Chic, We’ve Got You Covered
       </>
     ),
-    tagline: "Luxury designs for every occasion",
     font: "default",
   },
   {
@@ -38,7 +37,6 @@ const slides = [
         Confidence with Every Step
       </>
     ),
-    tagline: "From casual to formal, we’ve got you covered",
     font: "modern",
   },
   {
@@ -88,8 +86,8 @@ const Hero = () => {
             className="absolute block bg-white/20 animate-float"
             style={{
               left: ["25%", "10%", "70%", "40%", "85%"][i],
-              width: ["20px", "15px", "30px", "10px", "20px"][i], // Scaled down for mobile
-              height: ["20px", "15px", "30px", "10px", "20px"][i], // Scaled down for mobile
+              width: ["20px", "15px", "30px", "10px", "20px"][i],
+              height: ["20px", "15px", "30px", "10px", "20px"][i],
               animationDuration: ["20s", "22s", "18s", "25s", "20s"][i],
               animationDelay: ["0s", "2s", "0s", "1s", "3s"][i],
               bottom: "-150px",
@@ -106,11 +104,17 @@ const Hero = () => {
             : currentSlide.align === "right"
             ? "ml-auto mr-[5%] text-right"
             : "text-left"
-        } ${currentSlide.font === "modern" ? "font-raleway font-bold text-[40px] sm:text-[60px] tracking-wide" : ""}`}
+        } ${
+          currentSlide.font === "modern"
+            ? "eb-garamond font-bold text-[36px] sm:text-[56px] tracking-wider"
+            : "eb-garamond font-semibold text-[32px] sm:text-[48px] tracking-wide"
+        }`}
       >
-        <h1 className="text-3xl sm:text-5xl font-bold leading-tight">{currentSlide.title}</h1>
-        {currentSlide.tagline && <p className="text-base sm:text-lg mt-2 sm:mt-4 text-black">{currentSlide.tagline}</p>}
-        <button className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-transparent text-white border-2 border-white cursor-pointer transition-all duration-300 hover:bg-pink-500 hover:text-black hover:border-pink-500">
+        <h1 className="text-3xl sm:text-5xl font-bold leading-tight eb-garamond">{currentSlide.title}</h1>
+        {currentSlide.tagline && (
+          <p className="poppins text-base sm:text-lg mt-2 sm:mt-4 text-black">{currentSlide.tagline}</p>
+        )}
+        <button className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-transparent text-white border-2 border-white cursor-pointer transition-all duration-300 hover:bg-pink-500 hover:text-black hover:border-pink-500 poppins">
           Shop Now
         </button>
       </div>

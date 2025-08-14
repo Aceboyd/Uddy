@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import Nav from "../../Components/Nav/Nav";
 import Hero from "../Home/Hero/Hero";
 import Feature from "../Home/Feature/Feature";
+import Blog from "../Blog";
+import Testimony from "../Testimony";
+import ContactUs from "../ContactUs";
+import Footer from "../Footer";
 const Home = () => {
   const [cart, setCart] = useState([]); // cart state
 
@@ -18,6 +22,11 @@ const Home = () => {
       {/* Pass handleAddToCart to Feature so it can update cart */}
       <Hero />
       <Feature onAddToCart={handleAddToCart} />
+      <Blog />
+      <Testimony />   
+      <ContactUs />
+      <Footer />
+
     </div>
   );
 };
