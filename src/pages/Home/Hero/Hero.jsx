@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import BGIMG from "/BGIMG.jpg";
+
 import BGIMG3 from "/BGIMG3.jpg";
-import BGIMG2 from "/BGIMG2.jpg";
-import BGIMG4 from "/BGIMG4.jpg";
-import BGIMG5 from "/BGIMG5.jpg";
+
 
 const slides = [
   {
@@ -17,39 +15,9 @@ const slides = [
     ),
     font: "default",
   },
-  {
-    image: BGIMG4,
-    align: "left",
-    title: (
-      <>
-        Elevate Your <span className="text-pink-500">Wardrobe</span> – From
-        Power Dressing to Weekend Chic, We’ve Got You Covered
-      </>
-    ),
-    font: "default",
-  },
-  {
-    image: BGIMG5,
-    align: "left",
-    title: (
-      <>
-        Step into <span className="text-pink-500">Class</span> – Defines
-        Confidence with Every Step
-      </>
-    ),
-    font: "modern",
-  },
-  {
-    image: BGIMG,
-    align: "center",
-    title: (
-      <>
-        The <span className="text-pink-500">Exclusive</span> Collection –
-        Crafted for Those Who Desire More Than Just Fashion
-      </>
-    ),
-    font: "default",
-  },
+  
+  
+  
 ];
 
 const Hero = () => {
