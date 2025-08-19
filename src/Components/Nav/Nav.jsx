@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, ChevronDown, Menu, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const Nav = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -13,9 +14,10 @@ const Nav = () => {
   const cartRef = useRef(null);
   const navRef = useRef(null);
 
-  const userName = 'Alex'; // Replace with auth context
+  const { userName, isAuthenticated, logout } = useContext(AuthContext);
   const { cart = [], removeFromCart = () => {}, cartTotal = 0 } = useCart() || {};
-  const location = useLocation(); // To check current route
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -52,9 +54,15 @@ const Nav = () => {
       contactSection.scrollIntoView({ behavior: 'smooth' });
       setIsNavOpen(false);
     } else if (location.pathname !== '/contact-us') {
-      // Navigate to /contact-us if not on the page
       window.location.href = '/contact-us';
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setIsDropdownOpen(false);
+    setIsNavOpen(false);
+    navigate('/signin');
   };
 
   return (
@@ -81,7 +89,6 @@ const Nav = () => {
         <Link to="/" className="text-2xl tab:text-[28px] font-bold tracking-wide henny-penny">
           BlissByUddy
         </Link>
-        {/* Mobile Cart */}
         <div className="relative cursor-pointer" ref={cartRef}>
           <div className="flex items-center gap-2" onClick={() => setIsCartOpen((prev) => !prev)}>
             <ShoppingCart size={20} className={scrolled ? 'text-black' : 'text-white'} />
@@ -135,14 +142,12 @@ const Nav = () => {
 
       {/* Nav Content */}
       <div className="flex flex-col sm:flex-row w-full items-center sm:justify-between">
-        {/* Center Logo Desktop */}
         <div className="hidden sm:block sm:absolute sm:left-1/2 sm:-translate-x-1/2">
           <Link to="/" className="text-3xl tab:text-[28px] font-bold tracking-wide henny-penny">
             BlissByUddy
           </Link>
         </div>
 
-        {/* Navigation Links */}
         <nav
           id="mobile-nav"
           ref={navRef}
@@ -169,8 +174,6 @@ const Nav = () => {
               {item}
             </Link>
           ))}
-
-          {/* Mobile Profile */}
           <div className="flex flex-col gap-4 sm:hidden mt-4">
             <div ref={dropdownRef} className="relative cursor-pointer" onClick={() => setIsDropdownOpen((prev) => !prev)}>
               <div className="flex items-center gap-2">
@@ -180,17 +183,42 @@ const Nav = () => {
               </div>
               {isDropdownOpen && (
                 <div className="mt-2 w-40 bg-white text-black rounded-md shadow-lg z-50 overflow-hidden">
-                  <Link to="/signin" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600">
-                    Sign In
-                  </Link>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <Link
+                      to="/signin"
+                      className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                  )}
                   <hr className="border-t border-gray-200 my-1" />
-                  <Link to="/account" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600">
+                  <Link
+                    to="/account"
+                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
                     My Account
                   </Link>
-                  <Link to="/orders" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600">
+                  <Link
+                    to="/orders"
+                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
                     Orders
                   </Link>
-                  <Link to="/wishlist" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600">
+                  <Link
+                    to="/wishlist"
+                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
                     Wishlist
                   </Link>
                 </div>
@@ -199,9 +227,7 @@ const Nav = () => {
           </div>
         </nav>
 
-        {/* Desktop Right Section */}
         <div className="hidden sm:flex gap-[40px] tab:gap-[32px] items-center order-3">
-          {/* Cart */}
           <div className="relative cursor-pointer" ref={cartRef}>
             <ShoppingCart
               size={20}
@@ -250,25 +276,48 @@ const Nav = () => {
               </div>
             )}
           </div>
-
-          {/* Profile */}
           <div ref={dropdownRef} className="relative flex items-center gap-2 cursor-pointer" onClick={() => setIsDropdownOpen((prev) => !prev)}>
             <User size={20} className={`${scrolled ? 'text-black' : 'text-white'}`} />
             <span className={`text-sm ${scrolled ? 'text-black' : 'text-white'}`}>{userName}</span>
             <ChevronDown size={16} className={`${scrolled ? 'text-black' : 'text-white'}`} />
             {isDropdownOpen && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-md shadow-lg z-50 overflow-hidden">
-                <Link to="/signin" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600">
-                  Sign In
-                </Link>
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <Link
+                    to="/signin"
+                    className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                )}
                 <hr className="border-t border-gray-200 my-1" />
-                <Link to="/account" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600">
+                <Link
+                  to="/account"
+                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
                   My Account
                 </Link>
-                <Link to="/orders" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600">
+                <Link
+                  to="/orders"
+                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
                   Orders
                 </Link>
-                <Link to="/wishlist" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600">
+                <Link
+                  to="/wishlist"
+                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
                   Wishlist
                 </Link>
               </div>

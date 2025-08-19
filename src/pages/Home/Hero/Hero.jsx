@@ -78,7 +78,7 @@ const Hero = () => {
         />
       ))}
 
-      {/* Animated Polygons - Background layer */}
+      {/* Animated Polygons */}
       <ul className="absolute top-0 left-0 w-full h-full m-0 p-0 list-none overflow-hidden z-10 pointer-events-none">
         {[...Array(5)].map((_, i) => (
           <li
@@ -96,7 +96,7 @@ const Hero = () => {
         ))}
       </ul>
 
-      {/* Hero Content - Foreground layer */}
+      {/* Hero Content */}
       <div
         className={`relative z-20 max-w-[90%] sm:max-w-[600px] ${
           currentSlide.align === "center"
@@ -106,15 +106,19 @@ const Hero = () => {
             : "text-left"
         } ${
           currentSlide.font === "modern"
-            ? "eb-garamond font-bold text-[36px] sm:text-[56px] tracking-wider"
-            : "eb-garamond font-semibold text-[32px] sm:text-[48px] tracking-wide"
+            ? "font-['Protest_Revolution'] font-bold text-[36px] sm:text-[56px] tracking-wider"
+            : "font-['Protest_Revolution'] font-semibold text-[32px] sm:text-[48px] tracking-wide"
         }`}
       >
-        <h1 className="text-3xl sm:text-5xl font-bold leading-tight eb-garamond">{currentSlide.title}</h1>
+        <h1 className="text-3xl sm:text-5xl font-bold leading-tight font-['Protest_Revolution']">
+          {currentSlide.title}
+        </h1>
         {currentSlide.tagline && (
-          <p className="poppins text-base sm:text-lg mt-2 sm:mt-4 text-black">{currentSlide.tagline}</p>
+          <p className="font-['Poppins'] text-base sm:text-lg mt-2 sm:mt-4 text-black">
+            {currentSlide.tagline}
+          </p>
         )}
-        <button className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-transparent text-white border-2 border-white cursor-pointer transition-all duration-300 hover:bg-pink-500 hover:text-black hover:border-pink-500 poppins">
+        <button className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-transparent text-white border-2 border-white cursor-pointer transition-all duration-300 hover:bg-pink-500 hover:text-black hover:border-pink-500 font-['Poppins']">
           Shop Now
         </button>
       </div>
