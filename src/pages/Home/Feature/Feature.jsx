@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -32,7 +31,7 @@ const categories = [
 
 const Feature = () => {
   const { addToCart } = useCart();
-  const [visibleProducts, setVisibleProducts] = useState(4);
+  const [visibleProducts, setVisibleProducts] = useState(8);
 
   const loadMore = () => {
     setVisibleProducts((prev) => Math.min(prev + 4, products.length));

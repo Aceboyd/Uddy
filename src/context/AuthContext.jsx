@@ -4,7 +4,7 @@ import axios from "axios";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [userName, setUserName] = useState("Guest");
+  const [userName, setUserName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         setUserName(response.data.username);
         setIsAuthenticated(true);
       } else {
-        setUserName("Guest");
+        setUserName("");
         setIsAuthenticated(false);
       }
     } catch (err) {
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
         status: err.response?.status,
         data: err.response?.data,
       });
-      setUserName("Guest");
+      setUserName("");
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
       });
     } finally {
       setIsAuthenticated(false);
-      setUserName("Guest");
+      setUserName("");
     }
   };
 
