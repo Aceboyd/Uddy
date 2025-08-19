@@ -28,9 +28,7 @@ const ContactUs = () => {
 
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-semibold text-gray-900 mb-8 text-center">
-            Get in Touch
-          </h2>
+
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* LEFT: Contact Information */}
