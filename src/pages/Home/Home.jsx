@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Nav from "../../Components/Nav/Nav";
 import Hero from "../Home/Hero/Hero";
 import Feature from "../Home/Feature/Feature";
+import ShopByCategory from "../ShopByCategory";
 import Blog from "../Blog";
 import Testimony from "../Testimony";
 import ContactUs from "../ContactUs";
@@ -22,6 +23,7 @@ const Home = () => {
       {/* Pass handleAddToCart to Feature so it can update cart */}
       <Hero />
       <Feature onAddToCart={handleAddToCart} />
+      <ShopByCategory />
       <Blog />
       <Testimony />   
       <ContactUs />
