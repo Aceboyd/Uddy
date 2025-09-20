@@ -64,8 +64,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ Update quantity
-  // ✅ Update quantity (use PATCH instead of PUT)
+// ✅ Update quantity (use PATCH to /details/cart/ with product_id in body)
 const updateQuantity = async (itemId, quantity) => {
   if (!isAuthenticated || !token) {
     setError("Please log in to update cart.");
@@ -79,8 +78,8 @@ const updateQuantity = async (itemId, quantity) => {
   setError(null);
   try {
     const response = await api.patch(
-      `/details/cart/${itemId}/`, // keep same endpoint
-      { quantity },               // only updating quantity
+      "/details/cart/", // Use the same endpoint as addToCart and removeFromCart
+      { product_id: itemId, quantity }, // Send product_id and quantity in body
       { headers: { Authorization: `Bearer ${token}` } }
     );
     setCart(response.data.items ? mapCartItems(response.data.items) : []);
@@ -91,7 +90,6 @@ const updateQuantity = async (itemId, quantity) => {
     setIsLoading(false);
   }
 };
-
 
   // ✅ Remove item (fixed with product_id in body)
   const removeFromCart = async (itemId) => {
