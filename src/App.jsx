@@ -11,6 +11,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/blogPosts';
 import './index.css';
 import { CartProvider } from './context/CartContext';
+import PaymentStatus from './pages/PaymentStatus';
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blogpost/:id" element={<BlogPost />} />
-
+        <Route path='/payment-status' element={<PaymentStatus />} />
       </Routes>
     </CartProvider>
   );

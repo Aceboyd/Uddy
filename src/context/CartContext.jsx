@@ -1,46 +1,172 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { api, token, isAuthenticated } = useAuth();
 
-  const addToCart = (item) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
-      if (existingItem) {
-        return prevCart.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-      }
-      return [...prevCart, { ...item, quantity: 1 }];
-    });
+  // Map server cart to client format
+  const mapCartItems = (items) =>
+    items.map((item) => ({
+      id: item.product.id,
+      name: item.product.title,
+      price: item.product.price.toString(),
+      quantity: item.quantity,
+      image: item.product.image_url || null,
+    }));
+
+  // ✅ Fetch cart
+  const fetchCart = async () => {
+    if (!isAuthenticated || !token) {
+      setCart([]);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get("/details/cart/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCart(response.data.items ? mapCartItems(response.data.items) : []);
+    } catch (error) {
+      console.error("Fetch cart error:", error.response?.data || error.message);
+      setError("Failed to fetch cart. Please try again later.");
+      setCart([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const removeFromCart = (itemId) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
+  // ✅ Add item
+  const addToCart = async (item, quantity = 1) => {
+    if (!isAuthenticated || !token) {
+      setError("Please log in to add items to cart.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.post(
+        "/details/cart/",
+        { product_id: item.id, quantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCart(mapCartItems(response.data.items));
+    } catch (error) {
+      console.error("Add to cart error:", error.response?.data || error.message);
+      setError("Failed to add item to cart. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateQuantity = (itemId, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+  // ✅ Update quantity
+  // ✅ Update quantity (use PATCH instead of PUT)
+const updateQuantity = async (itemId, quantity) => {
+  if (!isAuthenticated || !token) {
+    setError("Please log in to update cart.");
+    return;
+  }
+  if (quantity < 1) {
+    setError("Quantity must be at least 1.");
+    return;
+  }
+  setIsLoading(true);
+  setError(null);
+  try {
+    const response = await api.patch(
+      `/details/cart/${itemId}/`, // keep same endpoint
+      { quantity },               // only updating quantity
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+    setCart(response.data.items ? mapCartItems(response.data.items) : []);
+  } catch (error) {
+    console.error("Update quantity error:", error.response?.data || error.message);
+    setError("Failed to update quantity. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+  // ✅ Remove item (fixed with product_id in body)
+  const removeFromCart = async (itemId) => {
+    if (!isAuthenticated || !token) {
+      setError("Please log in to remove items.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.delete("/details/cart/", {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { product_id: itemId }, // DRF expects product_id in body
+      });
+      setCart(response.data.items ? mapCartItems(response.data.items) : []);
+    } catch (error) {
+      console.error("Remove from cart error:", error.response?.data || error.message);
+      setError("Failed to remove item. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const clearCart = () => setCart([]);
+  // ✅ Clear cart
+  const clearCart = async () => {
+    if (!isAuthenticated || !token) {
+      setCart([]);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      await api.delete("/details/cart/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCart([]);
+    } catch (error) {
+      console.error("Clear cart error:", error.response?.data || error.message);
+      setError("Failed to clear cart. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const cartTotal = cart.reduce((total, item) => total + parseFloat(item.price.replace(',', '')) * item.quantity, 0);
+  // ✅ Calculate total
+  const cartTotal = cart.reduce((total, item) => {
+    const price = parseFloat(item.price) || 0;
+    return total + price * item.quantity;
+  }, 0);
+
+  useEffect(() => {
+    fetchCart();
+  }, [isAuthenticated, token, api]);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        cartTotal,
+        error,
+        isLoading,
+        fetchCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) throw new Error("useCart must be used within a CartProvider");
+  return context;
+};

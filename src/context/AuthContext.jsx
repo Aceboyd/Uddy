@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
 export const AuthContext = createContext();
@@ -7,6 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [userName, setUserName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [refresh, setRefresh] = useState(localStorage.getItem("refresh") || null);
 
   // Create axios instance
   const api = axios.create({
@@ -14,17 +16,34 @@ export const AuthProvider = ({ children }) => {
     withCredentials: true,
   });
 
-  // Axios interceptor for 401 handling
+  // 🔄 Refresh token function
+  const refreshToken = async () => {
+    if (!refresh) return false;
+    try {
+      const response = await api.post("/details/auth/jwt/refresh/", { refresh });
+      const newAccess = response.data.access;
+      localStorage.setItem("token", newAccess);
+      setToken(newAccess);
+      return newAccess;
+    } catch (err) {
+      console.error("Token refresh failed:", err.response?.data || err.message);
+      logout();
+      return false;
+    }
+  };
+
+  // Axios interceptor for handling 401 automatically
   api.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
-        // const refreshed = await refreshToken();
-        // if (refreshed) {
-        //   return api(originalRequest);
-        // }
+        const newAccess = await refreshToken();
+        if (newAccess) {
+          originalRequest.headers["Authorization"] = `Bearer ${newAccess}`;
+          return api(originalRequest); // retry request
+        }
       }
       return Promise.reject(error);
     }
@@ -33,15 +52,17 @@ export const AuthProvider = ({ children }) => {
   // Fetch current user
   const fetchUser = async () => {
     try {
-      const response = await api.get("/auth/users/me/");
-      console.log("fetchUser response:", response.data);
+      const response = await api.get("/auth/users/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("fetchUser response:", JSON.stringify(response.data, null, 2));
 
       if (response.data?.username) {
         setUserName(response.data.username);
         setIsAuthenticated(true);
       } else {
-        setUserName("");
-        setIsAuthenticated(false);
+        logout();
       }
     } catch (err) {
       console.error("Fetch user error:", {
@@ -49,37 +70,24 @@ export const AuthProvider = ({ children }) => {
         status: err.response?.status,
         data: err.response?.data,
       });
-      setUserName("");
-      setIsAuthenticated(false);
+      logout();
     } finally {
       setLoading(false);
     }
   };
 
-//   // Refresh token
-//   const refreshToken = async () => {
-//     try {
-//       const response = await api.post("/auth/jwt/refresh/");
-//       console.log("Token refresh response:", response.data);
-//       await fetchUser();
-//       return true;
-//     } catch (err) {
-//       console.error("Token refresh error:", {
-//         message: err.message,
-//         status: err.response?.status,
-//         data: err.response?.data,
-//       });
-//       setIsAuthenticated(false);
-//       setUserName("Guest");
-//       return false;
-//     }
-//   };
-
   // Login
   const login = async (email, password) => {
     try {
-      const response = await api.post("/details/auth/jwt/create/ ", { email, password });
-      console.log("Login response:", response.data);
+      const response = await api.post("/details/auth/jwt/create/", { email, password });
+      console.log("Login response:", JSON.stringify(response.data, null, 2));
+
+      // Save both access & refresh tokens
+      setToken(response.data.access);
+      setRefresh(response.data.refresh);
+      localStorage.setItem("token", response.data.access);
+      localStorage.setItem("refresh", response.data.refresh);
+
       await fetchUser();
       return true;
     } catch (err) {
@@ -95,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      await api.post("/details/auth/jwt/logout/ ");
+      await api.post("/details/auth/jwt/logout/");
       console.log("Logout successful");
     } catch (err) {
       console.error("Logout error:", {
@@ -106,19 +114,39 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsAuthenticated(false);
       setUserName("");
+      setToken(null);
+      setRefresh(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh");
     }
   };
 
   // Run once on mount
   useEffect(() => {
-    fetchUser();
+    if (token) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{ userName, isAuthenticated, login, logout, loading }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    userName,
+    isAuthenticated,
+    login,
+    logout,
+    loading,
+    api,
+    token,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

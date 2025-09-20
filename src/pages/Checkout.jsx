@@ -1,71 +1,141 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import Header from '../Components/Nav/Header'; // Adjust if path differs
+import React, { useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import Header from "../Components/Nav/Header";
+import { Minus, Plus } from "lucide-react";
 
 const Checkout = () => {
-  const { cart = [], updateQuantity = () => {}, removeFromCart = () => {}, cartTotal = 0, clearCart = () => {} } = useCart() || {};
-  const [paymentDetails, setPaymentDetails] = useState({
-    cardNumber: '',
-    expiry: '',
-    cvv: '',
-  });
+  const {
+    cart = [],
+    cartTotal = 0,
+    clearCart = () => {},
+    removeFromCart = () => {},
+    updateQuantity = () => {},
+  } = useCart() || {};
 
-  const tax = cartTotal * 0.1; // Dummy 10% tax
+  const { isAuthenticated, token } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const tax = cartTotal * 0.1;
   const grandTotal = cartTotal + tax;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setPaymentDetails((prev) => ({ ...prev, [name]: value }));
-  };
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isAuthenticated) {
+      alert("Please log in to proceed with checkout.");
+      navigate("/signin");
+    }
+  }, [isAuthenticated, navigate]);
 
-  const handlePayment = () => {
-    alert('Payment Successful! Thank you for your purchase.');
-    clearCart();
+  const handlePayment = async () => {
+    if (!isAuthenticated || !token) {
+      alert("Authentication required. Please log in.");
+      navigate("/signin");
+      return;
+    }
+
+    if (cart.length === 0) {
+      alert("Your cart is empty. Please add items before checkout.");
+      navigate("/");
+      return;
+    }
+
+    try {
+      const response = await fetch("/details/checkout/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        alert("Failed to initiate payment. No checkout URL provided.");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert(`Payment failed: ${err.message}`);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white pt-16 sm:pt-20"> {/* Added responsive padding for header */}
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
       <Header />
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8 mt-4 sm:mt-8 md:mt-12"> {/* Responsive padding and margin */}
+
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
         {cart.length === 0 ? (
-          <div className="text-center">
-            <p className="text-gray-500 mb-4">Your cart is empty.</p>
-            <Link to="/" className="bg-pink-500 text-white py-2 px-4 rounded hover:bg-pink-600">
+          <div className="text-center py-16 bg-white rounded-xl shadow-md">
+            <p className="text-gray-500 mb-6 text-lg">🛒 Your cart is empty.</p>
+            <Link
+              to="/"
+              className="inline-block bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-6 rounded-lg font-medium shadow hover:opacity-90 transition"
+            >
               Continue Shopping
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8"> {/* Adjusted gap for mobile */}
-            <div>
-              <h2 className="text-xl sm:text-2xl font-semibold mb-4">Your Items</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-xl shadow-md">
+              <h2 className="text-2xl font-semibold mb-6">Your Items</h2>
               <ul className="divide-y divide-gray-200">
                 {cart.map((item) => (
-                  <li key={item.id} className="flex items-center py-3 sm:py-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded"
-                    />
-                    <div className="flex-1 ml-3 sm:ml-4">
-                      <p className="text-base sm:text-lg font-medium">{item.name}</p>
-                      <p className="text-sm text-gray-500">₦{item.price}</p>
-                      <div className="flex items-center mt-2">
-                        <label className="text-sm mr-2">Qty:</label>
-                        <input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                          className="w-14 sm:w-16 border rounded px-2 py-1"
-                          min="1"
-                        />
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between py-5"
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded-lg border"
+                      />
+                      <div className="ml-4">
+                        <p className="text-lg font-medium">{item.name}</p>
+                        <p className="text-sm text-gray-500">₦{item.price}</p>
+
+                        {/* Quantity Controls */}
+                        <div className="flex items-center mt-3 space-x-2">
+                          <button
+                            onClick={() =>
+                              item.quantity > 1 &&
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                            className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="px-4 py-1 border rounded-md bg-gray-50 font-medium">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
+
                     <div className="text-right">
-                      <p className="font-bold">₦{(parseFloat(item.price.replace(',', '')) * item.quantity).toLocaleString()}</p>
+                      <p className="font-bold text-lg text-gray-800">
+                        ₦
+                        {(
+                          parseFloat(item.price.toString().replace(",", "")) *
+                          item.quantity
+                        ).toLocaleString()}
+                      </p>
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 text-sm hover:underline mt-2"
+                        className="text-red-500 text-sm hover:underline mt-3"
                       >
                         Remove
                       </button>
@@ -73,61 +143,35 @@ const Checkout = () => {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 border-t pt-4">
-                <p className="flex justify-between text-sm"><span>Subtotal:</span> <span>₦{cartTotal.toLocaleString()}</span></p>
-                <p className="flex justify-between text-sm mt-2"><span>Tax (10%):</span> <span>₦{tax.toLocaleString()}</span></p>
-                <p className="flex justify-between text-base sm:text-lg font-bold mt-2"><span>Grand Total:</span> <span>₦{grandTotal.toLocaleString()}</span></p>
-              </div>
             </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-semibold mb-4">Payment Details</h2>
-              <form className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Card Number</label>
-                  <input
-                    type="text"
-                    name="cardNumber"
-                    value={paymentDetails.cardNumber}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="1234 5678 9012 3456"
-                    maxLength="19"
-                  />
+
+            {/* Order Summary */}
+            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-md">
+              <h2 className="text-2xl font-semibold mb-6">Order Summary</h2>
+              <div className="space-y-3 text-gray-700">
+                <div className="flex justify-between text-base">
+                  <span>Subtotal</span>
+                  <span>₦{cartTotal.toLocaleString()}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Expiry Date</label>
-                    <input
-                      type="text"
-                      name="expiry"
-                      value={paymentDetails.expiry}
-                      onChange={handleInputChange}
-                      className="w-full border rounded px-3 py-2"
-                      placeholder="MM/YY"
-                      maxLength="5"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">CVV</label>
-                    <input
-                      type="text"
-                      name="cvv"
-                      value={paymentDetails.cvv}
-                      onChange={handleInputChange}
-                      className="w-full border rounded px-3 py-2"
-                      placeholder="123"
-                      maxLength="3"
-                    />
-                  </div>
+                <div className="flex justify-between text-base">
+                  <span>Tax (10%)</span>
+                  <span>₦{tax.toLocaleString()}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handlePayment}
-                  className="w-full bg-pink-500 text-white py-3 rounded-md hover:bg-pink-600 font-semibold"
-                >
-                  Pay Now ₦{grandTotal.toLocaleString()}
-                </button>
-              </form>
+                <div className="border-t pt-4 flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>₦{grandTotal.toLocaleString()}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handlePayment}
+                className="mt-8 w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 rounded-lg font-semibold shadow-lg hover:opacity-90 transition"
+              >
+                Pay Now ₦{grandTotal.toLocaleString()}
+              </button>
+              <p className="text-sm text-gray-500 mt-3 text-center">
+                💳 Secure checkout powered by your payment provider
+              </p>
             </div>
           </div>
         )}
