@@ -8,7 +8,7 @@ import Checkout from "./pages/Checkout";
 import ProductDetail from "./context/ProductDetail";
 import CategoryPage from "./pages/CategoryPage";
 import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost"; // ✅ ensure file is named BlogPost.jsx
+import BlogPost from "./pages/BlogPost"; // ✅ make sure the filename matches
 import PaymentStatus from "./pages/PaymentStatus";
 import ScrollToTop from "./pages/ScrollToTop";
 
@@ -19,7 +19,7 @@ function App() {
   return (
     <CartProvider>
       <Router>
-        <ScrollToTop /> {/* ✅ keeps page top on route change */}
+        <ScrollToTop /> {/* ✅ Always scrolls to top on route change */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<SignIn />} />
