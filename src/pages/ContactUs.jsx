@@ -19,7 +19,7 @@ const ContactUs = () => {
   };
 
   return (
-    <div id="contact-us" className="min-h-screen bg-pink-50">
+    <div id="contact-us" className="min-h-screen bg-white">
       <header className="py-6 text-center">
         <h1 className="text-3xl tab:text-[28px] font-bold tracking-wide henny-penny text-pink-600">
           Contact
