@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-import BGIMG3 from "/BGIMG3.jpg";
+import AMOR from "../../../../public/AMOR.png";
 
 
 const slides = [
   {
-    image: BGIMG3,
+    image: AMOR,
     align: "left",
     title: (
       <>
