@@ -51,7 +51,7 @@ const PaymentStatus = () => {
           setPaymentStatus("success");
 
           // Optional: clear query so refresh doesn’t trigger verify again
-          navigate("/orders", { replace: true });
+          navigate("/", { replace: true });
         } else if (statusFromAPI === "failed") {
           setError("Payment verification failed. Please contact support.");
           setPaymentStatus("failed");
