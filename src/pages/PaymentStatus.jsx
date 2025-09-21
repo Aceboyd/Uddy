@@ -1,94 +1,75 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import Header from '../Components/Nav/Header'; // Adjust if path differs
+import React, { useEffect, useState, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import Header from "../Components/Nav/Header";
 
 const PaymentStatus = () => {
   const { api, token, isAuthenticated, loading } = useAuth();
   const { clearCart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
-  const [paymentStatus, setPaymentStatus] = useState('pending');
+
+  const [paymentStatus, setPaymentStatus] = useState("pending");
   const [error, setError] = useState(null);
-  const [hasShownSuccessAlert, setHasShownSuccessAlert] = useState(false);
+
+  // ✅ Use ref so it doesn’t trigger re-renders
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     const verifyPayment = async () => {
-      console.log('Starting payment verification:', {
-        isAuthenticated,
-        token: token ? 'Present' : 'Missing',
-        loading,
-        locationSearch: location.search,
-      });
-
-      if (loading) {
-        console.log('Auth loading, waiting...');
-        return;
-      }
+      if (loading || hasVerified.current) return; // ✅ Wait until auth ready + prevent rerun
+      hasVerified.current = true;
 
       const params = new URLSearchParams(location.search);
-      const reference = params.get('reference');
+      const reference = params.get("reference");
 
       if (!reference) {
-        console.error('No reference in URL');
-        setError('No payment reference found.');
-        setPaymentStatus('failed');
+        setError("No payment reference found.");
+        setPaymentStatus("failed");
         return;
       }
 
       if (!isAuthenticated || !token) {
-        console.error('Authentication failed:', { isAuthenticated, token: token ? 'Present' : 'Missing' });
-        setError('Authentication required. Please sign in.');
-        setPaymentStatus('failed');
-        navigate('/signin');
+        setError("Authentication required. Please sign in.");
+        setPaymentStatus("failed");
+        navigate("/signin");
         return;
       }
 
       try {
         const response = await api.get(`/details/verify-payment/${reference}/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log('Payment verification response:', JSON.stringify(response.data, null, 2));
 
         const data = response.data;
-        // Check nested data.status for Kora response
-        const paymentStatusFromResponse = data.data?.status || data.status;
+        const statusFromAPI = data.data?.status || data.status;
 
-        if (paymentStatusFromResponse === 'success' && !hasShownSuccessAlert) {
+        if (statusFromAPI === "success") {
           clearCart();
-          alert('Payment Successful! Thank you for your purchase.');
-          setHasShownSuccessAlert(true);
-          setPaymentStatus('success');
-          // Optional: Navigate to clear reference
-          // navigate('/orders', { replace: true });
-        } else if (paymentStatusFromResponse === 'failed') {
-          setError('Payment verification failed. Please contact support.');
-          setPaymentStatus('failed');
-        } else if (paymentStatusFromResponse === 'pending') {
-          setError('Payment is still pending. Please check again later.');
-          setPaymentStatus('pending');
+          alert("Payment Successful! Thank you for your purchase."); // ✅ fires once only
+          setPaymentStatus("success");
+
+          // Optional: clear query so refresh doesn’t trigger verify again
+          navigate("/orders", { replace: true });
+        } else if (statusFromAPI === "failed") {
+          setError("Payment verification failed. Please contact support.");
+          setPaymentStatus("failed");
+        } else if (statusFromAPI === "pending") {
+          setError("Payment is still pending. Please check again later.");
+          setPaymentStatus("pending");
         } else {
-          console.error('Unexpected status:', paymentStatusFromResponse);
-          setError('Unknown payment status. Please contact support.');
-          setPaymentStatus('failed');
+          setError("Unknown payment status. Please contact support.");
+          setPaymentStatus("failed");
         }
-      } catch (error) {
-        console.error('Payment verification error:', {
-          message: error.message,
-          status: error.response?.status,
-          data: JSON.stringify(error.response?.data, null, 2),
-        });
-        setError(error.response?.data?.error || 'An error occurred while verifying payment.');
-        setPaymentStatus('failed');
+      } catch (err) {
+        setError(err.response?.data?.error || "Error verifying payment.");
+        setPaymentStatus("failed");
       }
     };
 
     verifyPayment();
-  }, [location.search, token, loading, isAuthenticated, api, navigate, clearCart]);
+  }, [loading, isAuthenticated, token, api, navigate, location.search, clearCart]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
