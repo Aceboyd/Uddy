@@ -6,28 +6,32 @@ import { useCart } from "../../../context/CartContext";
 const FeaturedProducts = () => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
-  const [visibleProducts, setVisibleProducts] = useState(8);
   const [loading, setLoading] = useState(true);
+  const [nextUrl, setNextUrl] = useState(
+    "https://uddy.onrender.com/details/products/"
+  );
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("https://uddy.onrender.com/details/products/");
-        const data = await res.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ✅ Fetch products from API
+  const fetchProducts = async (url) => {
+    if (!url) return; // no more pages
+    try {
+      setLoading(true);
+      const res = await fetch(url);
+      const data = await res.json();
 
-    fetchProducts();
-  }, []);
-
-  const loadMore = () => {
-    setVisibleProducts((prev) => Math.min(prev + 4, products.length));
+      setProducts((prev) => [...prev, ...(data.results || [])]);
+      setNextUrl(data.next); // store next page link
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // ✅ Load first page on mount
+  useEffect(() => {
+    fetchProducts(nextUrl);
+  }, []);
 
   return (
     <section className="p-4 sm:p-8 bg-gray-50">
@@ -35,11 +39,11 @@ const FeaturedProducts = () => {
         💥 Featured Products 💥
       </h1>
 
-      {loading ? (
+      {loading && products.length === 0 ? (
         <p className="text-center text-gray-500">Loading products...</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.slice(0, visibleProducts).map((product) => (
+          {products.map((product) => (
             <Link
               to={`/product/${product.id}`}
               key={product.id}
@@ -78,15 +82,20 @@ const FeaturedProducts = () => {
         </div>
       )}
 
-      {!loading && visibleProducts < products.length && (
+      {/* ✅ Show Load More only if next page exists */}
+      {nextUrl && !loading && (
         <div className="text-center mt-8 px-6">
           <button
-            onClick={loadMore}
+            onClick={() => fetchProducts(nextUrl)}
             className="bg-gray-50 text-black px-8 py-3 text-lg rounded-lg hover:bg-gray-200 transition-colors w-full border-2 border-gray-300"
           >
             Load More
           </button>
         </div>
+      )}
+
+      {loading && products.length > 0 && (
+        <p className="text-center text-gray-500 mt-4">Loading more...</p>
       )}
     </section>
   );
