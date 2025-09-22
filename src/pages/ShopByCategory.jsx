@@ -1,16 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import CATIMG from "/CATIMG.jpg";
-import CATIMG2 from "/CATIMG2.jpg";
-import CATIMG3 from "/CATIMG3.jpg";
-import CATIMG4 from "/CATIMG4.jpg";
+import CB from "/CB.jpg";
+import CC from "/CC.jpg";
+import CS from "/CS.jpg";
+import CA from "/CA.jpg";
 
 const categories = [
-  { name: "Bags", image: CATIMG2, description: "Stylish and functional bags for every occasion." },
-  { name: "Cloths", image: CATIMG3, description: "Trendy clothing to elevate your wardrobe." },
-  { name: "Footwears", image: CATIMG, description: "Comfortable and fashionable footwear." },
-  { name: "Assessories", image: CATIMG4, description: "Perfect add-ons to complete your look." },
+  { name: "Bags", image: CB, description: "Stylish and functional bags for every occasion." },
+  { name: "Cloths", image: CC, description: "Trendy clothing to elevate your wardrobe." },
+  { name: "Footwears", image: CS, description: "Comfortable and fashionable footwear." },
+  { name: "Assessories", image: CA, description: "Perfect add-ons to complete your look." },
 ];
 
 const ShopByCategory = () => {
