@@ -46,8 +46,8 @@ const Nav = () => {
       if (!isInsideAny(t, containers)) setIsDropdownOpen(false);
       if (!isInsideAny(t, cartContainers)) setIsCartOpen(false);
 
-      const toggleHit = t.closest && t.closest('.nav-toggle');
-      if (navRef.current && !navRef.current.contains(t) && !toggleHit) {
+      const isToggleButton = t.closest('.nav-toggle') || t.classList.contains('nav-toggle');
+      if (navRef.current && !navRef.current.contains(t) && !isToggleButton) {
         setIsNavOpen(false);
       }
     };
@@ -55,6 +55,10 @@ const Nav = () => {
     document.addEventListener('click', handleGlobalClick);
     return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
+
+  useEffect(() => {
+    console.log('isNavOpen:', isNavOpen); // Temporary debug log
+  }, [isNavOpen]);
 
   const navLinks = ['Home', 'Collection', 'Contact Us', 'About Us'];
 
@@ -99,12 +103,14 @@ const Nav = () => {
         scrolled ? 'bg-white/90 text-black' : 'bg-transparent text-white'
       }`}
     >
-
       {/* Mobile & Tablet top bar */}
       <div className="flex justify-between items-center w-full lg:hidden">
         <button
           className="nav-toggle"
-          onClick={() => setIsNavOpen((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsNavOpen((prev) => !prev);
+          }}
           aria-expanded={isNavOpen}
           aria-controls="mobile-nav"
           aria-label={isNavOpen ? 'Close menu' : 'Open menu'}
@@ -239,7 +245,9 @@ const Nav = () => {
         <nav
           id="mobile-nav"
           ref={navRef}
-          className={`nav-menu ${isNavOpen ? 'flex' : 'hidden'} flex-col lg:flex-row gap-4 lg:gap-[40px] mt-4 lg:mt-0 lg:flex lg:w-auto order-2 lg:order-1`}
+          className={`transition-all duration-300 overflow-hidden ${
+            isNavOpen ? 'max-h-[500px] flex' : 'max-h-0 hidden'
+          } flex-col lg:flex lg:flex-row gap-4 lg:gap-[40px] mt-4 lg:mt-0 lg:w-auto order-2 lg:order-1`}
         >
           {navLinks.map((item) => (
             <Link

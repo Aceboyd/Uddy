@@ -32,12 +32,11 @@ const Nav = () => {
 
     const handleGlobalClick = (event) => {
       const t = event.target;
-
       if (!isInsideAny(t, containers)) setIsDropdownOpen(false);
       if (!isInsideAny(t, cartContainers)) setIsCartOpen(false);
 
-      const toggleHit = t.closest && t.closest('.nav-toggle');
-      if (navRef.current && !navRef.current.contains(t) && !toggleHit) {
+      const isToggleButton = t.closest('.nav-toggle') || t.classList.contains('nav-toggle');
+      if (navRef.current && !navRef.current.contains(t) && !isToggleButton) {
         setIsNavOpen(false);
       }
     };
@@ -45,6 +44,10 @@ const Nav = () => {
     document.addEventListener('click', handleGlobalClick);
     return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
+
+  useEffect(() => {
+    console.log('isNavOpen:', isNavOpen); // Temporary debug log
+  }, [isNavOpen]);
 
   const navLinks = ['Home', 'Collection', 'Contact Us', 'About Us'];
 
@@ -91,7 +94,10 @@ const Nav = () => {
       <div className="flex justify-between items-center w-full lg:hidden">
         <button
           className="nav-toggle"
-          onClick={() => setIsNavOpen((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsNavOpen((prev) => !prev);
+          }}
           aria-expanded={isNavOpen}
           aria-controls="mobile-nav"
           aria-label={isNavOpen ? 'Close menu' : 'Open menu'}
