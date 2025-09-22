@@ -214,9 +214,7 @@ const Nav = () => {
         <nav
           id="mobile-nav"
           ref={navRef}
-          className={`nav-menu flex flex-col lg:flex-row gap-4 lg:gap-[40px] tab:gap-[32px] mt-4 lg:mt-0 ${
-            isNavOpen ? 'flex' : 'hidden lg:flex'
-          } lg:w-auto order-2 lg:order-1`}
+          className={`nav-menu ${isNavOpen ? 'flex' : 'hidden'} flex-col lg:flex-row gap-4 lg:gap-[40px] tab:gap-[32px] mt-4 lg:mt-0 lg:flex lg:w-auto order-2 lg:order-1`}
         >
           {navLinks.map((item) => (
             <Link
