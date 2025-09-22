@@ -36,7 +36,8 @@ const Nav = () => {
       if (!isInsideAny(t, cartContainers)) setIsCartOpen(false);
 
       const isToggleButton = t.closest('.nav-toggle') || t.classList.contains('nav-toggle');
-      if (navRef.current && !navRef.current.contains(t) && !isToggleButton) {
+      // ✅ Only close nav automatically for mobile/tablet, NOT desktop
+      if (window.innerWidth < 1024 && navRef.current && !navRef.current.contains(t) && !isToggleButton) {
         setIsNavOpen(false);
       }
     };
@@ -44,10 +45,6 @@ const Nav = () => {
     document.addEventListener('click', handleGlobalClick);
     return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
-
-  useEffect(() => {
-    console.log('isNavOpen:', isNavOpen); // Temporary debug log
-  }, [isNavOpen]);
 
   const navLinks = ['Home', 'Collection', 'Contact Us', 'About Us'];
 
@@ -208,7 +205,7 @@ const Nav = () => {
         </div>
       </div>
 
-      {/* Desktop Center Logo */}
+         {/* Desktop Center Logo + Nav */}
       <div className="flex flex-col lg:flex-row w-full items-center lg:justify-between">
         <div className="hidden lg:block lg:absolute lg:left-1/2 lg:-translate-x-1/2">
           <Link to="/" className="text-3xl tab:text-[28px] font-bold tracking-wide henny-penny text-black">
@@ -220,7 +217,9 @@ const Nav = () => {
         <nav
           id="mobile-nav"
           ref={navRef}
-          className={`nav-menu ${isNavOpen ? 'flex' : 'hidden'} flex-col lg:flex-row gap-4 lg:gap-[40px] tab:gap-[32px] mt-4 lg:mt-0 lg:flex lg:w-auto order-2 lg:order-1`}
+          className={`nav-menu ${
+            isNavOpen ? 'flex' : 'hidden'
+          } flex-col lg:flex lg:flex-row gap-4 lg:gap-[40px] tab:gap-[32px] mt-4 lg:mt-0 lg:w-auto order-2 lg:order-1`}
         >
           {navLinks.map((item) => (
             <Link

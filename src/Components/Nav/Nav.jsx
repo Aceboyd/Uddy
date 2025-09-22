@@ -31,11 +31,7 @@ const Nav = () => {
   }, []);
 
   useEffect(() => {
-    const containers = [
-      mobileHeaderUserRef,
-      mobileNavUserRef,
-      desktopUserRef,
-    ];
+    const containers = [mobileHeaderUserRef, mobileNavUserRef, desktopUserRef];
     const cartContainers = [mobileCartRef, desktopCartRef];
 
     const isInsideAny = (target, refs) =>
@@ -47,7 +43,9 @@ const Nav = () => {
       if (!isInsideAny(t, cartContainers)) setIsCartOpen(false);
 
       const isToggleButton = t.closest('.nav-toggle') || t.classList.contains('nav-toggle');
-      if (navRef.current && !navRef.current.contains(t) && !isToggleButton) {
+
+      // ✅ Only auto-close on mobile/tablet (<1024px)
+      if (window.innerWidth < 1024 && navRef.current && !navRef.current.contains(t) && !isToggleButton) {
         setIsNavOpen(false);
       }
     };
@@ -55,10 +53,6 @@ const Nav = () => {
     document.addEventListener('click', handleGlobalClick);
     return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
-
-  useEffect(() => {
-    console.log('isNavOpen:', isNavOpen); // Temporary debug log
-  }, [isNavOpen]);
 
   const navLinks = ['Home', 'Collection', 'Contact Us', 'About Us'];
 
@@ -99,7 +93,7 @@ const Nav = () => {
 
   return (
     <header
-      className={`flex flex-col lg:flex-row justify-between items-center py-[22px] px-4 lg:px-[60px] fixed top-0 lg:top-[3%] left-0 lg:left-1/2 lg:-translate-x-1/2 w-full lg:w-[90%] lg:max-w-[1400px] rounded-none lg:rounded-[70px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-10 backdrop-blur-lg transition-all duration-300 ${
+      className={`flex flex-col lg:flex-row justify-between items-center py-[22px] px-4 lg:px-[60px] fixed top-0 lg:top-[3%] left-0 lg:left-1/2 lg:-translate-x-1/2 w-full lg:w-[90%] lg:max-w-[1400px] rounded-none lg:rounded-[70px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-50 backdrop-blur-lg transition-all duration-300 ${
         scrolled ? 'bg-white/90 text-black' : 'bg-transparent text-white'
       }`}
     >
@@ -234,28 +228,32 @@ const Nav = () => {
       </div>
 
       {/* Desktop nav */}
-      <div className="flex flex-col lg:flex-row w-full items-center lg:justify-between">
+        <div className="flex flex-col lg:flex-row w-full items-center lg:justify-between">
         <div className="hidden lg:block lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-          <Link to="/" className="text-3xl font-bold tracking-wide henny-penny">
+          <Link to="/" className="text-3xl font-bold tracking-wide henny-penny text-black">
             BlissByUddy
           </Link>
         </div>
 
-        {/* Nav links */}
+        {/* ✅ Always visible on desktop */}
         <nav
           id="mobile-nav"
           ref={navRef}
-          className={`transition-all duration-300 overflow-hidden ${
-            isNavOpen ? 'max-h-[500px] flex' : 'max-h-0 hidden'
-          } flex-col lg:flex lg:flex-row gap-4 lg:gap-[40px] mt-4 lg:mt-0 lg:w-auto order-2 lg:order-1`}
+          className={`transition-all duration-300 overflow-hidden 
+            ${isNavOpen ? 'max-h-[500px] flex' : 'max-h-0 hidden'} 
+            flex-col lg:flex lg:flex-row lg:max-h-none lg:overflow-visible lg:!flex gap-4 lg:gap-[40px] mt-4 lg:mt-0 lg:w-auto order-2 lg:order-1`}
         >
           {navLinks.map((item) => (
             <Link
               key={item}
               to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
-              className={`text-[14px] lg:text-[16px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:transition-all after:duration-300 ${
-                scrolled ? 'after:bg-black hover:text-black' : 'after:bg-white hover:text-white'
-              }`}
+              className={`text-[14px] lg:text-[16px] relative 
+                hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] 
+                after:h-[2px] after:w-0 after:transition-all after:duration-300
+                ${scrolled 
+                  ? 'text-black after:bg-black hover:text-black' 
+                  : 'text-white after:bg-white hover:text-white lg:text-black lg:after:bg-black lg:hover:text-black'
+                }`}
               onClick={
                 item === 'Collection'
                   ? handleScrollToCategory
