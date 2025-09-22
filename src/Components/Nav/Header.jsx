@@ -9,7 +9,6 @@ const Nav = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(false);
 
-  // Separate refs for each area to avoid conflicts on mobile
   const mobileHeaderUserRef = useRef(null);
   const mobileNavUserRef = useRef(null);
   const desktopUserRef = useRef(null);
@@ -25,27 +24,18 @@ const Nav = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const containers = [
-      mobileHeaderUserRef,
-      mobileNavUserRef,
-      desktopUserRef,
-    ];
+    const containers = [mobileHeaderUserRef, mobileNavUserRef, desktopUserRef];
     const cartContainers = [mobileCartRef, desktopCartRef];
 
     const isInsideAny = (target, refs) =>
       refs.some(r => r.current && (r.current === target || r.current.contains(target)));
 
-    // Use 'click' so navigation from inside elements isn't prevented/unmounted first
     const handleGlobalClick = (event) => {
       const t = event.target;
 
-      // Close user dropdown only if click is outside ALL user dropdown containers
       if (!isInsideAny(t, containers)) setIsDropdownOpen(false);
-
-      // Close cart only if click is outside ALL cart containers
       if (!isInsideAny(t, cartContainers)) setIsCartOpen(false);
 
-      // Close mobile nav if click is outside nav AND not on the toggle button
       const toggleHit = t.closest && t.closest('.nav-toggle');
       if (navRef.current && !navRef.current.contains(t) && !toggleHit) {
         setIsNavOpen(false);
@@ -95,10 +85,10 @@ const Nav = () => {
 
   return (
     <header
-      className="flex flex-col sm:flex-row justify-between items-center py-[22px] px-4 sm:px-[60px] tab:px-[48px] fixed top-0 sm:top-[3%] tab:top-[1.5%] left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:w-[90%] sm:max-w-[1400px] tab:max-w-[820px] rounded-none sm:rounded-[70px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-10 backdrop-blur-lg transition-all duration-300 bg-white/90 text-black"
+      className="flex flex-col lg:flex-row justify-between items-center py-[22px] px-4 lg:px-[60px] tab:px-[48px] fixed top-0 lg:top-[3%] tab:top-[1.5%] left-0 lg:left-1/2 lg:-translate-x-1/2 w-full lg:w-[90%] lg:max-w-[1400px] tab:max-w-[820px] rounded-none lg:rounded-[70px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-10 backdrop-blur-lg transition-all duration-300 bg-white/90 text-black"
     >
-      {/* Mobile top bar */}
-      <div className="flex justify-between items-center w-full sm:hidden">
+      {/* Mobile + Tablet top bar */}
+      <div className="flex justify-between items-center w-full lg:hidden">
         <button
           className="nav-toggle"
           onClick={() => setIsNavOpen((prev) => !prev)}
@@ -118,7 +108,7 @@ const Nav = () => {
         </Link>
 
         <div className="flex items-center gap-4">
-          {/* Mobile Cart */}
+          {/* Mobile/Tablet Cart */}
           <div className="relative cursor-pointer" ref={mobileCartRef}>
             <div className="flex items-center gap-2" onClick={() => setIsCartOpen((prev) => !prev)}>
               <ShoppingCart size={20} className="text-black" />
@@ -169,7 +159,7 @@ const Nav = () => {
             )}
           </div>
 
-          {/* Mobile header user dropdown (icon) */}
+          {/* Mobile/Tablet User */}
           <div ref={mobileHeaderUserRef} className="relative cursor-pointer">
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -197,25 +187,13 @@ const Nav = () => {
                   </button>
                 )}
                 <hr className="border-t border-gray-200 my-1" />
-                <Link
-                  to="/account"
-                  className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/account" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   My Account
                 </Link>
-                <Link
-                  to="/orders"
-                  className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/orders" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   Orders
                 </Link>
-                <Link
-                  to="/wishlist"
-                  className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/wishlist" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   Wishlist
                 </Link>
               </div>
@@ -224,9 +202,9 @@ const Nav = () => {
         </div>
       </div>
 
-      {/* Center logo on desktop */}
-      <div className="flex flex-col sm:flex-row w-full items-center sm:justify-between">
-        <div className="hidden sm:block sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+      {/* Desktop Center Logo */}
+      <div className="flex flex-col lg:flex-row w-full items-center lg:justify-between">
+        <div className="hidden lg:block lg:absolute lg:left-1/2 lg:-translate-x-1/2">
           <Link to="/" className="text-3xl tab:text-[28px] font-bold tracking-wide henny-penny text-black">
             BlissByUddy
           </Link>
@@ -236,15 +214,15 @@ const Nav = () => {
         <nav
           id="mobile-nav"
           ref={navRef}
-          className={`nav-menu flex flex-col sm:flex-row gap-4 sm:gap-[40px] tab:gap-[32px] mt-4 sm:mt-0 ${
-            isNavOpen ? 'flex' : 'hidden sm:flex'
-          } sm:w-auto order-2 sm:order-1`}
+          className={`nav-menu flex flex-col lg:flex-row gap-4 lg:gap-[40px] tab:gap-[32px] mt-4 lg:mt-0 ${
+            isNavOpen ? 'flex' : 'hidden lg:flex'
+          } lg:w-auto order-2 lg:order-1`}
         >
           {navLinks.map((item) => (
             <Link
               key={item}
               to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
-              className="text-[14px] sm:text-[16px] tab:text-[15px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:bg-black after:transition-all after:duration-300 hover:text-black"
+              className="text-[14px] lg:text-[16px] tab:text-[15px] relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] after:h-[2px] after:w-0 after:bg-black after:transition-all after:duration-300 hover:text-black"
               onClick={
                 item === 'Collection'
                   ? handleScrollToCategory
@@ -257,8 +235,8 @@ const Nav = () => {
             </Link>
           ))}
 
-          {/* Mobile nav user dropdown (text + menu) */}
-          <div ref={mobileNavUserRef} className="flex flex-col gap-4 sm:hidden mt-4">
+          {/* Mobile/Tablet Nav User */}
+          <div ref={mobileNavUserRef} className="flex flex-col gap-4 lg:hidden mt-4">
             <div className="relative cursor-pointer">
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -286,34 +264,13 @@ const Nav = () => {
                     </button>
                   )}
                   <hr className="border-t border-gray-200 my-1" />
-                  <Link
-                    to="/account"
-                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsNavOpen(false);
-                    }}
-                  >
+                  <Link to="/account" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => { setIsDropdownOpen(false); setIsNavOpen(false); }}>
                     My Account
                   </Link>
-                  <Link
-                    to="/orders"
-                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsNavOpen(false);
-                    }}
-                  >
+                  <Link to="/orders" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => { setIsDropdownOpen(false); setIsNavOpen(false); }}>
                     Orders
                   </Link>
-                  <Link
-                    to="/wishlist"
-                    className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsNavOpen(false);
-                    }}
-                  >
+                  <Link to="/wishlist" className="block px-4 py-2 text-xs hover:bg-pink-100 hover:text-pink-600" onClick={() => { setIsDropdownOpen(false); setIsNavOpen(false); }}>
                     Wishlist
                   </Link>
                 </div>
@@ -322,8 +279,8 @@ const Nav = () => {
           </div>
         </nav>
 
-        {/* Desktop user/cart */}
-        <div className="hidden sm:flex gap-[16px] tab:gap-[16px] items-center order-3">
+        {/* Desktop User + Cart */}
+        <div className="hidden lg:flex gap-[16px] tab:gap-[16px] items-center order-3">
           <div className="relative cursor-pointer" ref={desktopCartRef}>
             <ShoppingCart
               size={20}
@@ -401,25 +358,13 @@ const Nav = () => {
                   </button>
                 )}
                 <hr className="border-t border-gray-200 my-1" />
-                <Link
-                  to="/account"
-                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/account" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   My Account
                 </Link>
-                <Link
-                  to="/orders"
-                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/orders" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   Orders
                 </Link>
-                <Link
-                  to="/wishlist"
-                  className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
+                <Link to="/wishlist" className="block px-4 py-2 text-sm hover:bg-pink-100 hover:text-pink-600" onClick={() => setIsDropdownOpen(false)}>
                   Wishlist
                 </Link>
               </div>

@@ -5,7 +5,7 @@ import AMOR from "../../../../public/AMOR.png";
 
 const slides = [
   {
-    image: AMOR,
+    image: "/AMOR.png", // ✅ public files are served from the root
     align: "left",
     title: (
       <>
@@ -15,10 +15,8 @@ const slides = [
     ),
     font: "default",
   },
-  
-  
-  
 ];
+
 
 const Hero = () => {
   const [current, setCurrent] = useState(0);
