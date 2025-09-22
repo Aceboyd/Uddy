@@ -19,7 +19,7 @@ const CategoryPage = () => {
       setError(null);
 
       try {
-        const apiCategory = categoryName; // always use as-is (assessories, bags, cloth, footwear)
+        const apiCategory = categoryName;
         console.log('Fetching products for category:', apiCategory);
 
         const response = await fetch(
@@ -60,13 +60,13 @@ const CategoryPage = () => {
   };
 
   return (
-    <div className="bg-stone-100 min-h-screen relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-amber-50/20 to-transparent pointer-events-none" />
+    <div className="bg-white min-h-screen relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-pink-50/30 to-transparent pointer-events-none" />
       <Header />
 
       <section className="p-3 sm:p-8 pt-20 max-w-7xl mx-auto">
         <nav className="block md:hidden text-sm font-serif text-gray-600 mb-4">
-          <Link to="/" className="hover:text-amber-700">Home</Link>
+          <Link to="/" className="hover:text-pink-600">Home</Link>
           <span className="mx-2">/</span>
           <span className="capitalize">{categoryName}</span>
         </nav>
@@ -90,7 +90,7 @@ const CategoryPage = () => {
                 <Link
                   to={`/product/${product.id}`}
                   key={product.id}
-                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-transform duration-300 hover:-translate-y-2 border border-amber-200"
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-transform duration-300 hover:-translate-y-2 border border-pink-200"
                 >
                   <img
                     src={product.image_url}
@@ -104,18 +104,18 @@ const CategoryPage = () => {
                       {product.time_ago ? `Added ${product.time_ago}` : ""}
                     </p>
                     <div className="flex justify-between items-center mt-4">
-                      <p className="text-amber-700 font-bold">
+                      <p className="text-pink-600 font-bold">
                         ₦{parseFloat(product.price).toLocaleString()}
                       </p>
                       <div className="flex items-center gap-3">
                         <ShoppingCart
-                          className="w-5 h-5 text-gray-700 cursor-pointer hover:text-black"
+                          className="w-5 h-5 text-gray-700 cursor-pointer hover:text-pink-600"
                           onClick={(e) => {
                             e.preventDefault();
                             addToCart(product);
                           }}
                         />
-                        <Heart className="w-5 h-5 text-gray-700 cursor-pointer hover:text-red-500" />
+                        <Heart className="w-5 h-5 text-gray-700 cursor-pointer hover:text-pink-500" />
                       </div>
                     </div>
                   </div>
