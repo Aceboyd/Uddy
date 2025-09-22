@@ -52,19 +52,19 @@ const Testimony = () => {
   return (
     <div
       id="testimonials"
-      className="min-h-screen bg-white font-poppins"
+      className="py-12 sm:py-16 lg:py-20 bg-white font-poppins" // ✅ removed min-h-screen
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <header className="py-6 text-center">
+      <header className="py-4 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold tracking-wide font-eb-garamond text-pink-600">
           Testimonials
         </h1>
       </header>
 
-      <section className="py-8 px-4 sm:px-6 lg:px-8">
+      <section className="px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6 sm:mb-8 text-center font-eb-garamond">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6 sm:mb-10 text-center font-eb-garamond">
             What Our Customers Say
           </h2>
 
