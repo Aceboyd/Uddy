@@ -230,10 +230,16 @@ const Nav = () => {
       {/* Desktop nav */}
         <div className="flex flex-col lg:flex-row w-full items-center lg:justify-between">
         <div className="hidden lg:block lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-          <Link to="/" className="text-3xl font-bold tracking-wide henny-penny text-black">
-            BlissByUddy
-          </Link>
-        </div>
+  <Link
+    to="/"
+    className={`text-3xl font-bold tracking-wide henny-penny ${
+      scrolled ? 'text-black' : 'text-white'
+    }`}
+  >
+    BlissByUddy
+  </Link>
+</div>
+
 
         {/* ✅ Always visible on desktop */}
         <nav
@@ -248,12 +254,13 @@ const Nav = () => {
               key={item}
               to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
               className={`text-[14px] lg:text-[16px] relative 
-                hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] 
-                after:h-[2px] after:w-0 after:transition-all after:duration-300
-                ${scrolled 
-                  ? 'text-black after:bg-black hover:text-black' 
-                  : 'text-white after:bg-white hover:text-white lg:text-black lg:after:bg-black lg:hover:text-black'
-                }`}
+  hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-[2px] 
+  after:h-[2px] after:w-0 after:transition-all after:duration-300
+  ${scrolled 
+    ? 'text-black after:bg-black hover:text-black' 
+    : 'text-white after:bg-white hover:text-white'
+  }`}
+
               onClick={
                 item === 'Collection'
                   ? handleScrollToCategory
