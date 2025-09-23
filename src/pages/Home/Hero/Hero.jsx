@@ -77,9 +77,10 @@ const Hero = () => {
             {currentSlide.tagline}
           </p>
         )}
-        <button className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-transparent text-white border-2 border-white cursor-pointer transition-all duration-300 hover:bg-pink-500 hover:text-black hover:border-pink-500">
+        <button className="mt-4 sm:mt-8 px-5 sm:px-8 py-3 sm:py-3 text-base sm:text-lg rounded-xl bg-pink-500 text-white border-2 border-pink-500 cursor-pointer transition-all duration-300 hover:bg-white hover:text-pink-500 hover:border-pink-500 shadow-md">
           Shop Now
         </button>
+
       </div>
     </div>
   );
