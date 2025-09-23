@@ -1,6 +1,11 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
+const api = axios.create({
+  baseURL: "https://uddy.onrender.com",
+  withCredentials: true, // send cookies with every request
+});
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -8,17 +13,11 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Axios instance
-  const api = axios.create({
-    baseURL: "https://uddy.onrender.com",
-    withCredentials: true, // 🔥 ensure cookies are always sent
-  });
-
-  // 🔄 Refresh token (cookie-based)
+  // --- Refresh token ---
   const refreshToken = async () => {
     try {
-      await api.post("/details/auth/jwt/refresh/"); 
-      return true; // cookie updated by backend
+      await api.post("/details/auth/jwt/refresh/");
+      return true;
     } catch (err) {
       console.error("Token refresh failed:", err.response?.data || err.message);
       logout();
@@ -26,30 +25,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Axios interceptor: auto-refresh on 401
+  // --- Axios interceptor: retry once on 401 ---
   api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-        const refreshed = await refreshToken();
-        if (refreshed) {
-          return api(originalRequest); // retry with new cookie
-        }
+    res => res,
+    async error => {
+      const original = error.config;
+      if (error.response?.status === 401 && !original._retry) {
+        original._retry = true;
+        const ok = await refreshToken();
+        if (ok) return api(original);
       }
       return Promise.reject(error);
     }
   );
 
-  // Fetch current user
+  // --- User info ---
   const fetchUser = async () => {
     try {
-      const response = await api.get("/auth/users/me/");
-      console.log("fetchUser response:", response.data);
-
-      if (response.data?.username) {
-        setUserName(response.data.username);
+      const { data } = await api.get("/auth/users/me/");
+      if (data?.username) {
+        setUserName(data.username);
         setIsAuthenticated(true);
       } else {
         logout();
@@ -62,11 +57,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login
+  // --- Auth actions ---
   const login = async (email, password) => {
     try {
       await api.post("/details/auth/jwt/create/", { email, password });
-      // ✅ Backend sets cookies, nothing to store
       await fetchUser();
       return true;
     } catch (err) {
@@ -75,11 +69,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout
   const logout = async () => {
     try {
       await api.post("/details/auth/jwt/logout/");
-      console.log("Logout successful");
     } catch (err) {
       console.error("Logout error:", err.response?.data || err.message);
     } finally {
@@ -88,27 +80,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // On mount, try fetching user (if cookies exist)
   useEffect(() => {
     fetchUser();
   }, []);
 
-  const value = {
-    userName,
-    isAuthenticated,
-    login,
-    logout,
-    loading,
-    api,
-  };
-
+  const value = { userName, isAuthenticated, login, logout, loading, api };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
