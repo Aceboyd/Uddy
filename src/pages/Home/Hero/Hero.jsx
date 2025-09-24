@@ -77,9 +77,15 @@ const Hero = () => {
             {currentSlide.tagline}
           </p>
         )}
-        <button className="mt-4 sm:mt-8 px-5 sm:px-8 py-3 sm:py-3 text-base sm:text-lg rounded-xl bg-pink-500 text-white border-2 border-pink-500 cursor-pointer transition-all duration-300 hover:bg-white hover:text-pink-500 hover:border-pink-500 shadow-md">
+        <button
+          onClick={() => {
+          document.getElementById("featured")?.scrollIntoView({ behavior: "smooth" });
+        }}
+          className="mt-4 sm:mt-8 px-5 sm:px-8 py-3 sm:py-3 text-base sm:text-lg rounded-xl bg-pink-500 text-white border-2 border-pink-500 cursor-pointer transition-all duration-300 hover:bg-transparent hover:text-pink-500 hover:border-pink-500 shadow-md"
+        >
           Shop Now
         </button>
+
 
       </div>
     </div>

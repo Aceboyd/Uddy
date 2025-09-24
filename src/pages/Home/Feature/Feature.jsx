@@ -34,10 +34,10 @@ const FeaturedProducts = () => {
   }, []);
 
   return (
-    <section className="p-4 sm:p-8 bg-gray-50">
-      <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[15px] sm:text-[30px] font-semibold">
+    <section id="featured" className="p-4 sm:p-8 bg-gray-50">
+        <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[15px] sm:text-[30px] font-semibold">
           💥 Featured Products 💥
-      </h1>
+        </h1>
 
 
       {loading && products.length === 0 ? (
