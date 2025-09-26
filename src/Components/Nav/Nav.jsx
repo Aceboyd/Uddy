@@ -13,7 +13,6 @@ const Nav = () => {
   const mobileHeaderUserRef = useRef(null);
   const mobileNavUserRef = useRef(null);
   const desktopUserRef = useRef(null);
-
   const mobileCartRef = useRef(null);
   const desktopCartRef = useRef(null);
 
@@ -77,11 +76,17 @@ const Nav = () => {
   };
 
   const handleLogout = async () => {
+  try {
     await logout();
+  } catch (err) {
+    console.error("Logout failed:", err);
+  } finally {
     setIsDropdownOpen(false);
     setIsNavOpen(false);
     navigate('/signin');
-  };
+  }
+};
+
 
   const handleSignIn = () => {
     navigate('/signin');
