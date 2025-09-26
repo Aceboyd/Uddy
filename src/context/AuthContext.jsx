@@ -1,23 +1,22 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
 export const AuthContext = createContext();
 
-// ✅ Fix for Vercel build: only check navigator in browser
 const isMobile = () =>
   typeof navigator !== "undefined" &&
   /Mobile|Android|iPhone/i.test(navigator.userAgent);
 
 const api = axios.create({
   baseURL: "https://uddy.onrender.com",
-  withCredentials: !isMobile() // cookies only for desktop/web
+  withCredentials: true, // cookies for desktop
 });
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // --- Store tokens locally for mobile ---
   const storeTokens = ({ access, refresh }) => {
     if (isMobile()) {
       localStorage.setItem("access", access);
@@ -25,38 +24,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --- Add Authorization header automatically on mobile ---
-  api.interceptors.request.use((config) => {
-    if (isMobile()) {
-      const token = localStorage.getItem("access");
-      if (token) config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
+  const getAccessToken = () => {
+    return isMobile() ? localStorage.getItem("access") : null;
+  };
 
-  // --- Refresh logic with guard to avoid loops ---
-  api.interceptors.response.use(
-    (res) => res,
-    async (error) => {
-      const original = error.config;
-      const isAuthCall =
-        original.url.includes("/jwt/refresh/") ||
-        original.url.includes("/jwt/logout/");
-
-      if (!isAuthCall && error.response?.status === 401 && !original._retry) {
-        original._retry = true;
-        const ok = await refreshToken();
-        if (ok) return api(original);
+  const fetchUser = async () => {
+    try {
+      const headers = {};
+      if (isMobile()) {
+        const token = getAccessToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
       }
-      return Promise.reject(error);
+      const { data } = await api.get("/auth/users/me/", { headers });
+      if (data?.username) {
+        setUserName(data.username);
+        setIsAuthenticated(true);
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error("Fetch user error:", err.response?.data || err.message);
+      logout();
+    } finally {
+      setLoading(false);
     }
-  );
-
-  const login = async (email, password) => {
-    const res = await api.post("/details/auth/jwt/create/", { email, password });
-    // Mobile: tokens in body; Web: cookies only
-    if (res.data.access && res.data.refresh) storeTokens(res.data);
-    await fetchUser();
   };
 
   const refreshToken = async () => {
@@ -65,10 +56,14 @@ export const AuthProvider = ({ children }) => {
       if (!refresh) return false;
       try {
         const res = await api.post("/details/auth/jwt/refresh/", { refresh });
-        localStorage.setItem("access", res.data.access);
-        return true;
+        if (res.data.access) {
+          localStorage.setItem("access", res.data.access);
+          return true;
+        }
+        return false;
       } catch (err) {
-        console.error("Token refresh failed:", err);
+        console.error("Mobile refresh failed:", err.response?.data || err.message);
+        logout();
         return false;
       }
     } else {
@@ -76,19 +71,25 @@ export const AuthProvider = ({ children }) => {
         await api.post("/details/auth/jwt/refresh/");
         return true;
       } catch {
+        logout();
         return false;
       }
     }
   };
 
-  const fetchUser = async () => {
+  const login = async (email, password) => {
     try {
-      const res = await api.get("/details/auth/users/me/");
-      setUser(res.data);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
+      const res = await api.post("/details/auth/jwt/create/", { email, password });
+
+      if (isMobile() && res.data.access && res.data.refresh) {
+        storeTokens(res.data);
+      }
+
+      await fetchUser();
+      return true;
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      return false;
     }
   };
 
@@ -96,21 +97,23 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post("/details/auth/jwt/logout/");
     } catch (err) {
-      console.warn("Logout error:", err);
+      console.error("Logout error:", err.response?.data || err.message);
+    } finally {
+      if (isMobile()) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+      }
+      setIsAuthenticated(false);
+      setUserName("");
     }
-    // Always clear mobile tokens
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    setUser(null);
   };
 
   useEffect(() => {
     fetchUser();
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = { userName, isAuthenticated, login, logout, loading, api, refreshToken };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export const useAuth = () => useContext(AuthContext);
