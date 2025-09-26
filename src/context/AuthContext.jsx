@@ -3,10 +3,13 @@ import axios from "axios";
 
 export const AuthContext = createContext();
 
+const isMobile = () =>
+  typeof navigator !== "undefined" &&
+  /Mobile|Android|iPhone/i.test(navigator.userAgent);
+
 const api = axios.create({
   baseURL: "https://uddy.onrender.com",
-  withCredentials: !/Mobile|Android|iPhone/i.test(navigator.userAgent)
-// cookies only for desktop/web
+  withCredentials: !isMobile(), // cookies only for desktop/web
 });
 
 export const AuthProvider = ({ children }) => {
@@ -15,7 +18,7 @@ export const AuthProvider = ({ children }) => {
 
   // --- Store tokens locally for mobile ---
   const storeTokens = ({ access, refresh }) => {
-    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+    if (isMobile()) {
       localStorage.setItem("access", access);
       localStorage.setItem("refresh", refresh);
     }
@@ -23,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   // --- Add Authorization header automatically on mobile ---
   api.interceptors.request.use((config) => {
-    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+    if (isMobile()) {
       const token = localStorage.getItem("access");
       if (token) config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
   // --- Refresh logic with guard to avoid loops ---
   api.interceptors.response.use(
-    res => res,
+    (res) => res,
     async (error) => {
       const original = error.config;
       const isAuthCall =
@@ -49,16 +52,14 @@ export const AuthProvider = ({ children }) => {
   );
 
   const login = async (email, password) => {
-    const res = await api.post("/details/auth/jwt/create/", { email,
-password });
+    const res = await api.post("/details/auth/jwt/create/", { email, password });
     // Mobile: tokens in body; Web: cookies only
     if (res.data.access && res.data.refresh) storeTokens(res.data);
     await fetchUser();
   };
 
   const refreshToken = async () => {
-    // Mobile: refresh from localStorage; Web: cookie
-    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+    if (isMobile()) {
       const refresh = localStorage.getItem("refresh");
       if (!refresh) return false;
       try {
