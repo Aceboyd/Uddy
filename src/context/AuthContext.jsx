@@ -40,11 +40,15 @@ export const AuthProvider = ({ children }) => {
         setUserName(data.username);
         setIsAuthenticated(true);
       } else {
-        logout();
+        // don’t auto-logout here, just reset state
+        setIsAuthenticated(false);
+        setUserName("");
       }
     } catch (err) {
       console.error("Fetch user error:", err.response?.data || err.message);
-      logout();
+      // don’t auto-logout on error, just reset state
+      setIsAuthenticated(false);
+      setUserName("");
     } finally {
       setLoading(false);
     }
@@ -63,16 +67,14 @@ export const AuthProvider = ({ children }) => {
         return false;
       } catch (err) {
         console.error("Mobile refresh failed:", err.response?.data || err.message);
-        logout();
-        return false;
+        return false; // don’t call logout here
       }
     } else {
       try {
         await api.post("/details/auth/jwt/refresh/");
         return true;
       } catch {
-        logout();
-        return false;
+        return false; // don’t call logout here
       }
     }
   };
