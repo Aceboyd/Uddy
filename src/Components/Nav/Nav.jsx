@@ -75,17 +75,12 @@ const Nav = () => {
     }
   };
 
-  const handleLogout = async () => {
-  try {
+ const handleLogout = async () => {
     await logout();
-  } catch (err) {
-    console.error("Logout failed:", err);
-  } finally {
     setIsDropdownOpen(false);
     setIsNavOpen(false);
     navigate('/signin');
-  }
-};
+  };
 
 
   const handleSignIn = () => {

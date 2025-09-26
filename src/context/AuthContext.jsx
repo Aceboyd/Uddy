@@ -1,94 +1,119 @@
-// src/context/AuthContext.js
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
 export const AuthContext = createContext();
 
+const isMobile = () =>
+  typeof navigator !== "undefined" &&
+  /Mobile|Android|iPhone/i.test(navigator.userAgent);
+
+const api = axios.create({
+  baseURL: "https://uddy.onrender.com",
+  withCredentials: true, // cookies for desktop
+});
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [authTokens, setAuthTokens] = useState(
-    localStorage.getItem("authTokens")
-      ? JSON.parse(localStorage.getItem("authTokens"))
-      : null
-  );
+  const [userName, setUserName] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Setup axios default header for authenticated requests
-  useEffect(() => {
-    if (authTokens) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${authTokens.access}`;
-    } else {
-      delete axios.defaults.headers.common["Authorization"];
+  const storeTokens = ({ access, refresh }) => {
+    if (isMobile()) {
+      localStorage.setItem("access", access);
+      localStorage.setItem("refresh", refresh);
     }
-  }, [authTokens]);
-
-  // Get user profile if tokens exist
-  const fetchUser = async () => {
-    if (authTokens) {
-      try {
-        const response = await axios.get("/auth/users/me/");
-        setUser(response.data);
-      } catch (err) {
-        console.warn("Failed to fetch user:", err.response?.status);
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
-    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, [authTokens]);
+  const getAccessToken = () => {
+    return isMobile() ? localStorage.getItem("access") : null;
+  };
+
+  const fetchUser = async () => {
+    try {
+      const headers = {};
+      if (isMobile()) {
+        const token = getAccessToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+      const { data } = await api.get("/auth/users/me/", { headers });
+      if (data?.username) {
+        setUserName(data.username);
+        setIsAuthenticated(true);
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error("Fetch user error:", err.response?.data || err.message);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshToken = async () => {
+    if (isMobile()) {
+      const refresh = localStorage.getItem("refresh");
+      if (!refresh) return false;
+      try {
+        const res = await api.post("/details/auth/jwt/refresh/", { refresh });
+        if (res.data.access) {
+          localStorage.setItem("access", res.data.access);
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Mobile refresh failed:", err.response?.data || err.message);
+        logout();
+        return false;
+      }
+    } else {
+      try {
+        await api.post("/details/auth/jwt/refresh/");
+        return true;
+      } catch {
+        logout();
+        return false;
+      }
+    }
+  };
 
   const login = async (email, password) => {
-    const response = await axios.post("/auth/jwt/create/", {
-      email,
-      password,
-    });
+    try {
+      const res = await api.post("/details/auth/jwt/create/", { email, password });
 
-    if (response.status === 200) {
-      setAuthTokens(response.data);
-      localStorage.setItem("authTokens", JSON.stringify(response.data));
-      axios.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${response.data.access}`;
+      if (isMobile() && res.data.access && res.data.refresh) {
+        storeTokens(res.data);
+      }
+
       await fetchUser();
       return true;
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      return false;
     }
-    return false;
   };
 
   const logout = async () => {
     try {
-      if (authTokens) {
-        await axios.post("/auth/jwt/logout/", {
-          refresh: authTokens.refresh,
-        });
-      }
+      await api.post("/details/auth/jwt/logout/");
     } catch (err) {
-      console.warn("Logout error:", err.response?.status);
+      console.error("Logout error:", err.response?.data || err.message);
     } finally {
-      setAuthTokens(null);
-      setUser(null);
-      localStorage.removeItem("authTokens");
-      delete axios.defaults.headers.common["Authorization"];
+      if (isMobile()) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+      }
+      setIsAuthenticated(false);
+      setUserName("");
     }
   };
 
-  const contextData = {
-    user,
-    authTokens,
-    login,
-    logout,
-    setAuthTokens,
-    setUser,
-  };
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
-  return (
-    <AuthContext.Provider value={contextData}>
-      {loading ? <div>Loading...</div> : children}
-    </AuthContext.Provider>
-  );
+  const value = { userName, isAuthenticated, login, logout, loading, api, refreshToken };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export const useAuth = () => useContext(AuthContext);
