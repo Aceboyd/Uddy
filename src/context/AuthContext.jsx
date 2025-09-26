@@ -3,13 +3,14 @@ import axios from "axios";
 
 export const AuthContext = createContext();
 
+// ✅ Fix for Vercel build: only check navigator in browser
 const isMobile = () =>
   typeof navigator !== "undefined" &&
   /Mobile|Android|iPhone/i.test(navigator.userAgent);
 
 const api = axios.create({
   baseURL: "https://uddy.onrender.com",
-  withCredentials: !isMobile(), // cookies only for desktop/web
+  withCredentials: !isMobile() // cookies only for desktop/web
 });
 
 export const AuthProvider = ({ children }) => {
