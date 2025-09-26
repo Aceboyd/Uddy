@@ -1,36 +1,45 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
-
-const api = axios.create({
-  baseURL: "https://uddy.onrender.com",
-  withCredentials: true, // send cookies with every request
-});
 
 export const AuthContext = createContext();
 
+const api = axios.create({
+  baseURL: "https://uddy.onrender.com",
+  withCredentials: !/Mobile|Android|iPhone/i.test(navigator.userAgent)
+// cookies only for desktop/web
+});
+
 export const AuthProvider = ({ children }) => {
-  const [userName, setUserName] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- Refresh token ---
-  const refreshToken = async () => {
-    try {
-      await api.post("/details/auth/jwt/refresh/");
-      return true;
-    } catch (err) {
-      console.error("Token refresh failed:", err.response?.data || err.message);
-      logout();
-      return false;
+  // --- Store tokens locally for mobile ---
+  const storeTokens = ({ access, refresh }) => {
+    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+      localStorage.setItem("access", access);
+      localStorage.setItem("refresh", refresh);
     }
   };
 
-  // --- Axios interceptor: retry once on 401 ---
+  // --- Add Authorization header automatically on mobile ---
+  api.interceptors.request.use((config) => {
+    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+      const token = localStorage.getItem("access");
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  // --- Refresh logic with guard to avoid loops ---
   api.interceptors.response.use(
     res => res,
-    async error => {
+    async (error) => {
       const original = error.config;
-      if (error.response?.status === 401 && !original._retry) {
+      const isAuthCall =
+        original.url.includes("/jwt/refresh/") ||
+        original.url.includes("/jwt/logout/");
+
+      if (!isAuthCall && error.response?.status === 401 && !original._retry) {
         original._retry = true;
         const ok = await refreshToken();
         if (ok) return api(original);
@@ -39,33 +48,45 @@ export const AuthProvider = ({ children }) => {
     }
   );
 
-  // --- User info ---
-  const fetchUser = async () => {
-    try {
-      const { data } = await api.get("/auth/users/me/");
-      if (data?.username) {
-        setUserName(data.username);
-        setIsAuthenticated(true);
-      } else {
-        logout();
+  const login = async (email, password) => {
+    const res = await api.post("/details/auth/jwt/create/", { email,
+password });
+    // Mobile: tokens in body; Web: cookies only
+    if (res.data.access && res.data.refresh) storeTokens(res.data);
+    await fetchUser();
+  };
+
+  const refreshToken = async () => {
+    // Mobile: refresh from localStorage; Web: cookie
+    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+      const refresh = localStorage.getItem("refresh");
+      if (!refresh) return false;
+      try {
+        const res = await api.post("/details/auth/jwt/refresh/", { refresh });
+        localStorage.setItem("access", res.data.access);
+        return true;
+      } catch (err) {
+        console.error("Token refresh failed:", err);
+        return false;
       }
-    } catch (err) {
-      console.error("Fetch user error:", err.response?.data || err.message);
-      logout();
-    } finally {
-      setLoading(false);
+    } else {
+      try {
+        await api.post("/details/auth/jwt/refresh/");
+        return true;
+      } catch {
+        return false;
+      }
     }
   };
 
-  // --- Auth actions ---
-  const login = async (email, password) => {
+  const fetchUser = async () => {
     try {
-      await api.post("/details/auth/jwt/create/", { email, password });
-      await fetchUser();
-      return true;
-    } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
-      return false;
+      const res = await api.get("/details/auth/users/me/");
+      setUser(res.data);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,19 +94,21 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post("/details/auth/jwt/logout/");
     } catch (err) {
-      console.error("Logout error:", err.response?.data || err.message);
-    } finally {
-      setIsAuthenticated(false);
-      setUserName("");
+      console.warn("Logout error:", err);
     }
+    // Always clear mobile tokens
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    setUser(null);
   };
 
   useEffect(() => {
     fetchUser();
   }, []);
 
-  const value = { userName, isAuthenticated, login, logout, loading, api };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-export const useAuth = () => useContext(AuthContext);
