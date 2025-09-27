@@ -1,3 +1,4 @@
+// CartContext.jsx
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 
@@ -9,15 +10,19 @@ export const CartProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { api, token, isAuthenticated } = useAuth();
 
-  // Map server cart to client format
+  // ✅ Normalize items from backend or guest
   const mapCartItems = (items) =>
-    items.map((item) => ({
-      id: item.product.id,
-      name: item.product.title,
-      price: item.product.price.toString(),
-      quantity: item.quantity,
-      image: item.product.image_url || null,
-    }));
+    items.map((item) => {
+      const product = item.product || item; // backend gives {product}, guest gives raw product
+      return {
+        id: item.id || Date.now(), // unique id (backend cart item id or fallback)
+        productId: product.id, // backend product id
+        name: product.title || product.name || "Unknown",
+        price: product.price?.toString() || "0",
+        quantity: item.quantity || 1,
+        image: product.image_url || product.image || null,
+      };
+    });
 
   // ✅ Fetch cart
   const fetchCart = async () => {
@@ -31,7 +36,9 @@ export const CartProvider = ({ children }) => {
       const response = await api.get("/details/cart/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCart(response.data.items ? mapCartItems(response.data.items) : []);
+      setCart(
+        response.data.items ? mapCartItems(response.data.items) : []
+      );
     } catch (error) {
       console.error("Fetch cart error:", error.response?.data || error.message);
       setError("Failed to fetch cart. Please try again later.");
@@ -41,58 +48,81 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ Add item
-  const addToCart = async (item, quantity = 1) => {
-    if (!isAuthenticated || !token) {
-      setError("Please log in to add items to cart.");
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
+  // ✅ Add item (works for guest + logged in)
+  const addToCart = async (item) => {
     try {
-      const response = await api.post(
-        "/details/cart/",
-        { product_id: item.id, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setCart(mapCartItems(response.data.items));
-    } catch (error) {
-      console.error("Add to cart error:", error.response?.data || error.message);
-      setError("Failed to add item to cart. Please try again.");
+      setIsLoading(true);
+      setError(null);
+
+      const payload = {
+        product_id: item.productId || item.id,
+        quantity: 1,
+      };
+
+      if (isAuthenticated && token) {
+        const res = await api.post(
+          "/details/cart/add/",
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setCart(
+          res.data.items ? mapCartItems(res.data.items) : []
+        );
+      } else {
+        // Guest mode → normalize using mapCartItems
+        setCart((prev) => {
+          const exists = prev.find(
+            (p) => p.productId === payload.product_id
+          );
+          if (exists) {
+            return prev.map((p) =>
+              p.productId === payload.product_id
+                ? { ...p, quantity: p.quantity + 1 }
+                : p
+            );
+          }
+          return [...prev, ...mapCartItems([{ ...item, quantity: 1 }])];
+        });
+      }
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-// ✅ Update quantity (use PATCH to /details/cart/ with product_id in body)
-const updateQuantity = async (itemId, quantity) => {
-  if (!isAuthenticated || !token) {
-    setError("Please log in to update cart.");
-    return;
-  }
-  if (quantity < 1) {
-    setError("Quantity must be at least 1.");
-    return;
-  }
-  setIsLoading(true);
-  setError(null);
-  try {
-    const response = await api.patch(
-      "/details/cart/", // Use the same endpoint as addToCart and removeFromCart
-      { product_id: itemId, quantity }, // Send product_id and quantity in body
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setCart(response.data.items ? mapCartItems(response.data.items) : []);
-  } catch (error) {
-    console.error("Update quantity error:", error.response?.data || error.message);
-    setError("Failed to update quantity. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  // ✅ Update quantity
+  const updateQuantity = async (item, quantity) => {
+    if (!isAuthenticated || !token) {
+      setError("Please log in to update cart.");
+      return;
+    }
+    if (quantity < 1) {
+      setError("Quantity must be at least 1.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.patch(
+        "/details/cart/",
+        { product_id: item.productId, quantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCart(
+        response.data.items ? mapCartItems(response.data.items) : []
+      );
+    } catch (error) {
+      console.error("Update quantity error:", error.response?.data || error.message);
+      setError("Failed to update quantity. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // ✅ Remove item (fixed with product_id in body)
-  const removeFromCart = async (itemId) => {
+  // ✅ Remove item
+  const removeFromCart = async (item) => {
     if (!isAuthenticated || !token) {
       setError("Please log in to remove items.");
       return;
@@ -102,9 +132,11 @@ const updateQuantity = async (itemId, quantity) => {
     try {
       const response = await api.delete("/details/cart/", {
         headers: { Authorization: `Bearer ${token}` },
-        data: { product_id: itemId }, // DRF expects product_id in body
+        data: { product_id: item.productId },
       });
-      setCart(response.data.items ? mapCartItems(response.data.items) : []);
+      setCart(
+        response.data.items ? mapCartItems(response.data.items) : []
+      );
     } catch (error) {
       console.error("Remove from cart error:", error.response?.data || error.message);
       setError("Failed to remove item. Please try again.");
@@ -134,7 +166,7 @@ const updateQuantity = async (itemId, quantity) => {
     }
   };
 
-  // ✅ Calculate total
+  // ✅ Total
   const cartTotal = cart.reduce((total, item) => {
     const price = parseFloat(item.price) || 0;
     return total + price * item.quantity;
