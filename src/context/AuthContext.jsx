@@ -1,52 +1,78 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
-export const AuthContext = createContext();
 
-const isMobile = () =>
-  typeof navigator !== "undefined" &&
-  /Mobile|Android|iPhone/i.test(navigator.userAgent);
+export const AuthContext = createContext();
 
 const api = axios.create({
   baseURL: "https://uddy.onrender.com",
-  withCredentials: true, // cookies for desktop
 });
+
+// Request interceptor
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  console.log("➡️ Request:", config.method?.toUpperCase(), config.url, config.data);
+  return config;
+});
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      error.response?.data?.code === "token_not_valid" &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      const refresh = localStorage.getItem("refresh");
+      if (refresh) {
+        try {
+          const res = await api.post("/details/auth/jwt/refresh/", { refresh });
+          if (res.data.access) {
+            localStorage.setItem("access", res.data.access);
+            api.defaults.headers.Authorization = `Bearer ${res.data.access}`;
+            originalRequest.headers.Authorization = `Bearer ${res.data.access}`;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const AuthProvider = ({ children }) => {
   const [userName, setUserName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem("access") || null);
 
   const storeTokens = ({ access, refresh }) => {
-    if (isMobile()) {
-      localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
-    }
-  };
-
-  const getAccessToken = () => {
-    return isMobile() ? localStorage.getItem("access") : null;
+    localStorage.setItem("access", access);
+    localStorage.setItem("refresh", refresh);
+    setToken(access);
   };
 
   const fetchUser = async () => {
     try {
-      const headers = {};
-      if (isMobile()) {
-        const token = getAccessToken();
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-      }
-      const { data } = await api.get("/auth/users/me/", { headers });
-      if (data?.username) {
-        setUserName(data.username);
+      const { data } = await api.get("/auth/users/me/");
+      if (data?.username || data?.email) {
+        setUserName(data.username || data.email);
         setIsAuthenticated(true);
       } else {
-        // don’t auto-logout here, just reset state
         setIsAuthenticated(false);
         setUserName("");
       }
-    } catch (err) {
-      console.error("Fetch user error:", err.response?.data || err.message);
-      // don’t auto-logout on error, just reset state
+    } catch {
       setIsAuthenticated(false);
       setUserName("");
     } finally {
@@ -54,67 +80,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const refreshToken = async () => {
-    if (isMobile()) {
-      const refresh = localStorage.getItem("refresh");
-      if (!refresh) return false;
-      try {
-        const res = await api.post("/details/auth/jwt/refresh/", { refresh });
-        if (res.data.access) {
-          localStorage.setItem("access", res.data.access);
-          return true;
-        }
-        return false;
-      } catch (err) {
-        console.error("Mobile refresh failed:", err.response?.data || err.message);
-        return false; // don’t call logout here
-      }
-    } else {
-      try {
-        await api.post("/details/auth/jwt/refresh/");
-        return true;
-      } catch {
-        return false; // don’t call logout here
-      }
-    }
-  };
-
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const res = await api.post("/details/auth/jwt/create/", { email, password });
-
-      if (isMobile() && res.data.access && res.data.refresh) {
+      const res = await api.post("/details/auth/jwt/create/", {
+        email: identifier,
+        password,
+      });
+      if (res.data.access && res.data.refresh) {
         storeTokens(res.data);
       }
-
       await fetchUser();
       return true;
-    } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
+    } catch {
       return false;
     }
   };
 
   const logout = async () => {
     try {
-      await api.post("/details/auth/jwt/logout/");
-    } catch (err) {
-      console.error("Logout error:", err.response?.data || err.message);
-    } finally {
-      if (isMobile()) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-      }
-      setIsAuthenticated(false);
-      setUserName("");
-    }
+      await api.post("/details/auth/jwt/logout/", {
+        refresh: localStorage.getItem("refresh"),
+      });
+    } catch {}
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    setToken(null);
+    setIsAuthenticated(false);
+    setUserName("");
   };
 
   useEffect(() => {
     fetchUser();
   }, []);
 
-  const value = { userName, isAuthenticated, login, logout, loading, api, refreshToken };
+  const value = { userName, isAuthenticated, token, login, logout, loading, api };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

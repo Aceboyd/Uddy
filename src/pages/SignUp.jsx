@@ -53,7 +53,7 @@ function SignUp() {
 
     try {
       const response = await axios.post(
-        'https://uddy.onrender.com/auth/users/',
+        'https://uddy.onrender.com/details/auth/jwt/register/',
         {
           username: formData.username,
           fullname: formData.fullname,

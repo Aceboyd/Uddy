@@ -5,54 +5,46 @@ import { useAuth } from "../context/AuthContext";
 import Header from "../Components/Nav/Header";
 
 const Checkout = () => {
-  const {
-    cart = [],
-    cartTotal = 0,
-    clearCart = () => {},
-    removeFromCart = () => {},
-    updateQuantity = () => {},
-    error,
-    isLoading,
-    fetchCart,
-  } = useCart();
-
+  const { cart, cartTotal, error, isLoading, updateQuantity, removeFromCart } =
+    useCart();
   const { isAuthenticated, token, api } = useAuth();
   const navigate = useNavigate();
 
   const tax = cartTotal * 0.1;
   const grandTotal = cartTotal + tax;
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!isAuthenticated) {
-      alert("Please log in to proceed with checkout.");
       navigate("/signin");
     }
   }, [isAuthenticated, navigate]);
 
-  // Handle payment (centralized in CartContext)
   const handlePayment = async () => {
     if (!isAuthenticated || !token) {
-      alert("Authentication required. Please log in.");
+      alert("Please log in to continue.");
       navigate("/signin");
       return;
     }
+
     if (!cart.length) {
       alert("Your cart is empty.");
-      navigate("/");
       return;
     }
 
     try {
-      const response = await api.post(
-        "/details/checkout/",
+      const res = await api.post(
+        "/details/checkout/", // ✅ let your axios `baseURL` handle domain
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      const data = response.data;
 
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (res.data?.checkout_url) {
+        window.location.href = res.data.checkout_url; // ✅ redirect to Kora checkout
       } else {
         alert("Checkout URL not returned.");
       }
@@ -71,12 +63,14 @@ const Checkout = () => {
             {error}
           </div>
         )}
+
         {isLoading && (
           <div className="text-center py-4">
             <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto"></div>
             <p className="text-gray-500 mt-2">Loading...</p>
           </div>
         )}
+
         {!cart.length && !isLoading ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-md">
             <p className="text-gray-500 mb-6 text-lg">🛒 Your cart is empty.</p>
@@ -94,7 +88,10 @@ const Checkout = () => {
               <h2 className="text-2xl font-semibold mb-6">Your Items</h2>
               <ul className="divide-y divide-gray-200">
                 {cart.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between py-5">
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between py-5"
+                  >
                     <div className="flex items-center">
                       <img
                         src={item.image}
@@ -103,14 +100,18 @@ const Checkout = () => {
                       />
                       <div className="ml-4">
                         <p className="text-lg font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-500">₦{(parseFloat(item.price)).toLocaleString()}</p>
+                        <p className="text-sm text-gray-500">
+                          ₦{parseFloat(item.price).toLocaleString()}
+                        </p>
                         <div className="flex items-center mt-3">
                           <label className="text-sm mr-2">Qty:</label>
                           <input
                             type="number"
                             value={item.quantity}
                             min="1"
-                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                            onChange={(e) =>
+                              updateQuantity(item.id, parseInt(e.target.value))
+                            }
                             disabled={isLoading}
                             className="w-16 border rounded-md px-2 py-1 text-center focus:ring-2 focus:ring-pink-500 disabled:opacity-50"
                           />
@@ -119,7 +120,10 @@ const Checkout = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg text-gray-800">
-                        ₦{(parseFloat(item.price) * item.quantity).toLocaleString()}
+                        ₦
+                        {(
+                          parseFloat(item.price) * item.quantity
+                        ).toLocaleString()}
                       </p>
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -160,7 +164,7 @@ const Checkout = () => {
                 Pay Now ₦{grandTotal.toLocaleString()}
               </button>
               <p className="text-sm text-gray-500 mt-3 text-center">
-                💳 Secure checkout powered by your payment provider
+                💳 Secure checkout powered by Kora
               </p>
             </div>
           </div>

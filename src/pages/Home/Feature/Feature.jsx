@@ -11,16 +11,22 @@ const FeaturedProducts = () => {
     "https://uddy.onrender.com/details/products/"
   );
 
-  // ✅ Fetch products from API
   const fetchProducts = async (url) => {
-    if (!url) return; // no more pages
+    if (!url) return;
     try {
       setLoading(true);
       const res = await fetch(url);
       const data = await res.json();
 
-      setProducts((prev) => [...prev, ...(data.results || [])]);
-      setNextUrl(data.next); // store next page link
+      setProducts((prev) => {
+        const merged = [...prev, ...(data.results || [])];
+        const unique = merged.filter(
+          (item, index, self) =>
+            index === self.findIndex((p) => p.id === item.id)
+        );
+        return unique;
+      });
+      setNextUrl(data.next);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -28,17 +34,15 @@ const FeaturedProducts = () => {
     }
   };
 
-  // ✅ Load first page on mount
   useEffect(() => {
     fetchProducts(nextUrl);
   }, []);
 
   return (
     <section id="featured" className="p-4 sm:p-8 bg-gray-50">
-        <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[15px] sm:text-[30px] font-semibold">
-          💥 Featured Products 💥
-        </h1>
-
+      <h1 className="text-center mt-4 sm:mt-8 mb-8 sm:mb-16 text-[15px] sm:text-[30px] font-semibold">
+        💥 Featured Products 💥
+      </h1>
 
       {loading && products.length === 0 ? (
         <p className="text-center text-gray-500">Loading products...</p>
@@ -83,7 +87,6 @@ const FeaturedProducts = () => {
         </div>
       )}
 
-      {/* ✅ Show Load More only if next page exists */}
       {nextUrl && !loading && (
         <div className="text-center mt-8 px-6">
           <button
